@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "LEUTE! — German, in the moment.",
-  description: "Catch the German. Get the meaning. Find your next words.",
+  title: "LEUTE! — Highly questionable German",
+  description: "Live translation and deeply questionable German replies.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

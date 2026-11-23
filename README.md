@@ -1,6 +1,6 @@
 # LEUTE!
 
-A live German listening desk: streaming captions, English translation, and four reply modes. Built with React, TypeScript, Vinext, and Cloudflare Workers. Uses Meta Model API credits from [dev.meta.ai](https://dev.meta.ai/).
+An unserious German translator with one big listen button, live captions, and four reply modes. Built with React, TypeScript, Vinext, and Cloudflare Workers. Uses Meta Model API credits from [dev.meta.ai](https://dev.meta.ai/).
 
 ## Run locally
 
@@ -21,7 +21,7 @@ The example session works immediately without any credentials. It is prewritten 
 - Meta Muse Voice Transcribe, streaming mono PCM16 over a server-proxied WebSocket.
 - German and English language hints, cumulative live captions, automatic utterance boundaries.
 - Optional session-scoped speaker labels. These do not identify a person or isolate a voice.
-- Accurate English translation plus Natural, Fluent, Funny, and Gibberish reply modes.
+- Accurate English translation plus Normal, Tryhard, Unhinged, and Gibberish reply modes.
 - Streaming structured replies, English meaning, approximate pronunciation, copy, and opt-in browser speech playback.
 - Typed input, scripted examples, in-tab session notes, bookmarks, and text export.
 - Local microphone level test and local audio-reference preview.

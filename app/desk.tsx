@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { AudioLines, BookOpen, Check, ChevronDown, Copy, Download, Headphones, HelpCircle, Keyboard, Languages, LoaderCircle, Mic, Play, Plus, Radio, RotateCcw, Settings2, ShieldCheck, Sparkles, Square, Trash2, Volume2, Waves, X, Zap, MessageSquare, Smile, WandSparkles, Bookmark, CheckCircle2 } from "lucide-react";
+import { AudioLines, BookOpen, Check, Copy, Download, Headphones, HelpCircle, Keyboard, LoaderCircle, Mic, Play, RotateCcw, Settings2, Square, Trash2, Volume2, X, Bookmark } from "lucide-react";
 import { consumeEvents, partialResult, validResult } from "../lib/assist.mjs";
 import { demoAnswer, samples, type Mode, type Answer } from "../lib/demo";
 
@@ -9,17 +9,17 @@ type Turn = { id: string; text: string; time: string; source: "live" | "typed" |
 type Config = { configured: boolean; provider: string };
 type Tab = "desk" | "notes" | "audio";
 type Recognition = { lang: string; continuous: boolean; interimResults: boolean; onresult: ((event: any) => void) | null; onerror: ((event: any) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort: () => void };
-const modes: { id: Mode; title: string; subtitle: string; icon: typeof Sparkles }[] = [
-  { id: "natural", title: "Keep it natural", subtitle: "Casual. Confident. You.", icon: MessageSquare },
-  { id: "fluent", title: "Show off", subtitle: "Unexpectedly fluent.", icon: Sparkles },
-  { id: "funny", title: "Get a little weird", subtitle: "Good German. Odd ideas.", icon: Smile },
-  { id: "gibberish", title: "Absolute Quatsch", subtitle: "German-ish nonsense.", icon: WandSparkles },
+const modes: { id: Mode; title: string; subtitle: string; emoji: string }[] = [
+  { id: "natural", title: "Normal", subtitle: "Actual German", emoji: "😇" },
+  { id: "fluent", title: "Tryhard", subtitle: "Suspiciously fluent", emoji: "🤓" },
+  { id: "funny", title: "Unhinged", subtitle: "Correct grammar, wrong planet", emoji: "🦆" },
+  { id: "gibberish", title: "Gibberish", subtitle: "Barely a language", emoji: "🧌" },
 ];
 const now = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 const uid = () => crypto.randomUUID();
 
 export default function Desk() {
-  const [tab, setTab] = useState<Tab>("desk"); const [mode, setMode] = useState<Mode>("natural");
+  const [tab, setTab] = useState<Tab>("desk"); const [mode, setMode] = useState<Mode>("funny");
   const [turns, setTurns] = useState<Turn[]>([]); const turnsRef = useRef<Turn[]>([]);
   const [selected, setSelected] = useState<string | null>(null); const [partial, setPartial] = useState("");
   const [config, setConfig] = useState<Config | null>(null); const [settings, setSettings] = useState(false); const [help, setHelp] = useState(false);
@@ -36,7 +36,7 @@ export default function Desk() {
   const updateTurns = (fn: (items: Turn[]) => Turn[]) => { const next = fn(turnsRef.current); turnsRef.current = next; setTurns(next); };
   const patchTurn = (id: string, patch: Partial<Turn>) => updateTurns(items => items.map(t => t.id === id ? { ...t, ...patch } : t));
   useEffect(() => { modeRef.current = mode; }, [mode]); useEffect(() => { autoRef.current = autoReply; }, [autoReply]);
-  useEffect(() => { fetch("/api/config", { cache: "no-store" }).then(async r => { if (!r.ok) throw new Error(); const value = await r.json() as Config; if (typeof value.configured !== "boolean") throw new Error(); setConfig(value); }).catch(() => setNotice("Could not check the AI connection. Reload to try again.")); }, []);
+  useEffect(() => { fetch("/api/config", { cache: "no-store" }).then(async r => { if (!r.ok) throw new Error(); const value = await r.json() as Config; if (typeof value.configured !== "boolean") throw new Error(); setConfig(value); }).catch(() => setNotice("Connection check failed. Try refreshing.")); }, []);
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, [turns.length, partial]);
   useEffect(() => { if (!listening) return; const start = Date.now(); const timer = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000); return () => clearInterval(timer); }, [listening]);
   useEffect(() => () => { liveRef.current = false; sessionGeneration.current++; requestRef.current?.abort(); demoTimers.current.forEach(clearTimeout); recognitionRef.current?.abort(); streamRef.current?.getTracks().forEach(t => t.stop()); socketRef.current?.close(); void contextRef.current?.close(); cancelAnimationFrame(meterRef.current); if (referenceRef.current) URL.revokeObjectURL(referenceRef.current); }, []);
@@ -145,7 +145,7 @@ export default function Desk() {
     words.forEach((_, i) => demoTimers.current.push(setTimeout(() => setPartial(words.slice(0, i + 1).join(" ")), 110 * (i + 1))));
     demoTimers.current.push(setTimeout(() => { addFinal(samples[sample].text, "demo", undefined, sample); setDemoRunning(false); }, 110 * words.length + 400));
   }
-  function clearSession() { stopDemo(); stopCapture(false); requestRef.current?.abort(); updateTurns(() => []); setSelected(null); setPartial(""); setElapsed(0); setNotice("Session cleared. Nothing is stored by this app after you leave or reload."); }
+  function clearSession() { stopDemo(); stopCapture(false); requestRef.current?.abort(); updateTurns(() => []); setSelected(null); setPartial(""); setElapsed(0); setNotice("Cleared."); }
   function submitTyped(e: FormEvent) { e.preventDefault(); if (!input.trim()) return; addFinal(input, "typed"); setInput(""); setTyped(false); }
   const active = turns.find(t => t.id === selected) || turns.at(-1); const chosenMode = modes.find(m => m.id === mode)!;
   const modeSelect = (next: Mode) => { setMode(next); modeRef.current = next; setPronounce(false); if (active) void analyze(active, next); };
@@ -158,55 +158,107 @@ export default function Desk() {
   async function testMicrophone() { if (testing) { stopCapture(false); return; } stopCapture(false); setTesting(true); try { await attachMicrophone(); } catch (e) { stopCapture(false); setNotice(e instanceof Error ? e.message : "Microphone unavailable."); } }
 
   return <div className="app-shell">
-    <aside className="sidebar">
-      <a className="brand" href="/" aria-label="LEUTE home">LEUTE<span>!</span><i /></a>
-      <p className="brand-caption">German, in the moment.</p>
-      <div className="nav-label">YOUR WORKSPACE</div>
-      <nav aria-label="Workspace">
-        <button className={tab === "desk" ? "nav-item selected" : "nav-item"} onClick={() => setTab("desk")}><Radio size={19} />Live desk<span className="nav-badge">DE</span></button>
-        <button className={tab === "notes" ? "nav-item selected" : "nav-item"} onClick={() => setTab("notes")}><BookOpen size={19} />Session notes{turns.length > 0 && <span className="count">{turns.length}</span>}</button>
-        <button className={tab === "audio" ? "nav-item selected" : "nav-item"} onClick={() => setTab("audio")}><Headphones size={19} />Audio lab</button>
+    <header className="site-header">
+      <button className="wordmark" onClick={() => setTab("desk")} aria-label="LEUTE home">LEUTE<span>!</span></button>
+      <span className="unserious-sticker" aria-hidden="true">SEHR UNSERIÖS</span>
+      <nav className="utility-nav" aria-label="Tools">
+        <button aria-label="History" title="History" className={tab === "notes" ? "utility-button selected" : "utility-button"} onClick={() => setTab(tab === "notes" ? "desk" : "notes")}><BookOpen size={18} /><span>History</span>{turns.length > 0 && <b>{turns.length}</b>}</button>
+        <button aria-label="Mic check" title="Mic check" className={tab === "audio" ? "utility-button selected" : "utility-button"} onClick={() => setTab(tab === "audio" ? "desk" : "audio")}><Headphones size={18} /><span>Mic check</span></button>
+        <button className="utility-button settings-button" aria-label="Settings" onClick={() => setSettings(true)}><Settings2 size={20} /></button>
       </nav>
-      <div className="sidebar-tip"><div className="tip-icon"><Languages size={22} /></div><strong>A little language.<br />A lot of personality.</strong><p>Catch what’s said.<br />Decide what comes next.</p><span>DU SCHAFFST DAS.</span></div>
-      <div className="sidebar-bottom"><button className="nav-item" onClick={() => setSettings(true)}><Settings2 size={18} />Settings</button><button className="nav-item" onClick={() => setHelp(true)}><HelpCircle size={18} />How it works</button><div className="made-mark"><span className="tiny-logo">L!</span><span>Your German sidekick<small>Made for the moment.</small></span></div></div>
-    </aside>
-    <main className="main-workspace">
-      <header className="topbar"><div className="breadcrumb">Workspace <span>/</span> <strong>{tab === "desk" ? "Live desk" : tab === "notes" ? "Session notes" : "Audio lab"}</strong></div><div className="topbar-right"><span className="language-pair"><span className="german-flag" />Deutsch <span className="language-divider">/</span> English</span><button className="icon-button" aria-label="Open settings" onClick={() => setSettings(true)}><Settings2 size={18} /></button></div></header>
-      <div className="workspace-body">
-        <section className="page-heading"><div><div className="eyebrow"><span />YOUR GERMAN SIDEKICK</div><h1>{tab === "desk" ? <>Keep up. <span>Speak up.</span></> : tab === "notes" ? <>A few words <span>to keep.</span></> : <>Find your <span>frequency.</span></>}</h1><p>{tab === "desk" ? "Live meaning. A reply for every mood. You’ve got this." : tab === "notes" ? "Your conversation, all in one place. Here until you clear it or close the page." : "Check your microphone and get your listening setup ready."}</p></div><button className="button secondary new-session" onClick={clearSession}><Plus size={17} />New session</button></section>
-        {tab === "desk" && <>
-          <div className="session-strip"><div className="session-status"><span className={listening ? "status-dot on" : "status-dot"} />{listening ? "Listening live" : connecting ? "Connecting…" : demoRunning ? "Playing an example" : "Ready when you are"}{listening && <span className="elapsed">{Math.floor(elapsed / 60).toString().padStart(2, "0")}:{(elapsed % 60).toString().padStart(2, "0")}</span>}</div><div className="strip-right"><span><ShieldCheck size={14} />Session stays in this tab</span><button onClick={runDemo} disabled={demoRunning}><Play size={13} />Try an example</button></div></div>
-          <div className="desk-grid">
-            <section className="transcript-panel panel"><div className="panel-header"><div><span className="section-icon"><AudioLines size={19} /></span><h2>The conversation</h2></div><span className="small-tag">DE <span>/</span> EN</span></div>
-              <div className="transcript-scroll" ref={scrollRef} role="log" aria-label="Conversation transcript" aria-live="polite">
-                {!turns.length && !partial && <div className="empty-conversation"><div className="empty-art" aria-hidden="true"><div className="art-caption">HALLO, WELT.</div><div className="bubble german-bubble">Na, alles klar?<span className="bubble-tail" /></div><div className="bubble english-bubble">Getting there.<span className="mini-spark">✳</span></div><div className="art-wave">{[10, 19, 12, 29, 40, 22, 14, 32, 18, 11, 25, 14].map((v, i) => <i key={i} style={{ height: v }} />)}</div></div><h3>Let’s catch the conversation.</h3><p>Start listening to see German captions<br />and the English meaning, side by side.</p><button className="text-button" onClick={runDemo}>Take it for a test drive <Play size={13} /></button></div>}
-                {turns.map(t => <button key={t.id} className={`transcript-turn ${active?.id === t.id ? "active" : ""}`} onClick={() => { setSelected(t.id); if (t.mode) { setMode(t.mode); modeRef.current = t.mode; } if (!t.answer && !t.busy) void analyze(t); }}><div className="turn-meta"><span>{t.source === "demo" ? "EXAMPLE" : t.source === "typed" ? "TYPED" : t.speaker ? `SPEAKER ${t.speaker}` : "HEARD IN GERMAN"}</span><time>{t.time}</time>{t.saved && <Bookmark size={12} />}</div><p lang="de">{t.text}</p><div className="turn-translation">{t.answer?.translation || (t.busy ? "Finding the meaning…" : "Select to translate")}</div></button>)}
-                {partial && <div className="transcript-turn partial"><div className="turn-meta">{demoRunning ? "EXAMPLE • SIMULATED CAPTIONS" : "HEARING NOW"}<span className="typing-dots">•••</span></div><p lang="de">{partial}<span className="text-cursor" /></p></div>}
-              </div>
-              <div className="capture-controls"><div className="microphone-status"><div className={`mini-meter ${demoRunning ? "demo-meter" : ""}`}>{Array.from({ length: 15 }, (_, i) => <i key={i} style={{ height: 5 + (i % 5) * 3, background: level > i / 15 ? "var(--orange)" : undefined }} />)}</div><span>{listening ? "Microphone is on" : connecting ? "Requesting microphone" : "Microphone is off"}</span><button className="icon-button" onClick={() => setSettings(true)} aria-label="Microphone settings"><ChevronDown size={15} /></button></div><div className="capture-actions"><button className={`button primary ${listening || connecting ? "recording" : ""}`} onClick={startSession}>{connecting ? <LoaderCircle className="spin" size={18} /> : listening || demoRunning ? <Square size={16} fill="currentColor" /> : <Mic size={18} />}{listening || connecting || demoRunning ? "Stop listening" : "Start listening"}</button><button className="button keyboard-button" onClick={() => setTyped(!typed)} aria-expanded={typed} aria-label="Type German instead"><Keyboard size={20} /></button></div>{typed && <form className="type-form" onSubmit={submitTyped}><label htmlFor="german-input">Type or paste what was said</label><textarea id="german-input" autoFocus maxLength={2500} value={input} onChange={e => setInput(e.target.value)} placeholder="Was habt ihr am Wochenende gemacht?" /><button className="button secondary" disabled={!input.trim()}>Translate & reply</button></form>}<p className="capture-note">Listen with everyone’s knowledge and permission.<br />Audio is processed by your selected speech provider.</p></div>
-            </section>
-            <div className="reply-column"><section className="modes-panel"><div className="section-title"><h2>Choose your energy</h2><span>YOUR REPLY, YOUR RULES</span></div><div className="mode-grid" role="group" aria-label="Reply mode">{modes.map(m => <button key={m.id} className={`mode-card mode-${m.id} ${mode === m.id ? "chosen" : ""}`} onClick={() => modeSelect(m.id)} aria-pressed={mode === m.id}><div className="mode-card-top"><m.icon size={19} /><span className="radio-circle">{mode === m.id && <Check size={10} strokeWidth={3} />}</span></div><strong>{m.title}</strong><span>{m.subtitle}</span></button>)}</div></section>
-              <section className={`reply-card mode-accent-${mode}`} aria-live="polite" aria-busy={active?.busy || false}><div className="reply-card-header"><span><Sparkles size={15} />YOUR NEXT WORDS</span><span className="reply-mode-tag">{chosenMode.title}</span></div>{active?.source === "demo" && <span className="example-label">SCRIPTED EXAMPLE</span>}
-                {active?.error ? <div className="reply-error"><HelpCircle size={26} /><h3>One connection to make.</h3><p>{active.error}</p><button className="button dark-button" onClick={() => config?.configured ? void analyze(active) : setSettings(true)}>{config?.configured ? "Try again" : "Connection settings"}</button></div> : active?.answer?.german ? <><p className="german-reply" lang="de">{active.answer.german}</p><div className="meaning-label">IN OTHER WORDS</div><p className="english-reply">{active.answer.english || "Translating the reply…"}</p>{active.answer.note && <p className="answer-note">{active.answer.note}</p>}{pronounce && <div className="pronunciation"><span>SAY IT LIKE THIS · APPROXIMATE</span><p>{active.answer.pronunciation}</p></div>}</> : <div className="reply-empty"><div className="sparkle-art"><Sparkles size={35} strokeWidth={1.3} /></div><h3>{active?.busy ? "Finding your words…" : "The right words.\nYour kind of delivery."}</h3><p>{active?.busy ? "Translation and a reply will appear here." : "Pick a mode. We’ll help with the rest."}</p></div>}
-                <div className="reply-actions"><button onClick={copyReply} disabled={!active?.answer?.german}>{copied ? <Check size={15} /> : <Copy size={15} />}{copied ? "Copied" : "Copy"}</button><button onClick={speakReply} disabled={!active?.answer?.german} aria-label="Hear the German reply"><Volume2 size={17} /></button><button onClick={() => setPronounce(!pronounce)} disabled={!active?.answer?.pronunciation} aria-pressed={pronounce} aria-label="Show pronunciation"><span className="phonetic-icon">Aa</span></button><button className="regenerate" aria-label="Regenerate reply" disabled={!active || active.busy} onClick={() => active && void analyze(active)}><RotateCcw size={16} /></button></div>
-              </section><div className="reply-footnote"><Zap size={14} /><span>{active?.duration ? `${(active.duration / 1000).toFixed(1)}s to complete this reply` : "Built for quick comebacks. Timing depends on audio and network."}</span></div>
-            </div>
+    </header>
+
+    <main>
+      {tab === "desk" && <>
+        <section className="control-bar" aria-label="Listening controls">
+          <button className={`listen-button ${listening || connecting ? "is-live" : ""}`} onClick={startSession}>
+            {connecting ? <LoaderCircle className="spin" size={27} /> : listening || demoRunning ? <Square size={24} fill="currentColor" /> : <Mic size={29} />}
+            {connecting ? "CONNECTING…" : listening || demoRunning ? "STOP" : "LISTEN"}
+          </button>
+          <div className="quick-actions">
+            <button className="plain-button" onClick={() => setTyped(!typed)} aria-expanded={typed} aria-label="Type German instead"><Keyboard size={18} />Type it</button>
+            <button className="plain-button" onClick={runDemo} disabled={demoRunning}><Play size={17} />Demo</button>
           </div>
-          <div className="bottom-banner"><div className="banner-mark">ß<span>!</span></div><div><strong>Same conversation. Four different personalities.</strong><p>Switch modes whenever the mood changes. The meaning stays true.</p></div><span className="banner-sticker">ALLES KLAR.</span></div>
-        </>}
-        {tab === "notes" && <section className="panel notes-panel"><div className="panel-header"><h2>Session notes <span className="count">{turns.length}</span></h2><button className="button secondary" onClick={exportNotes} disabled={!turns.length}><Download size={16} />Export text</button></div>{!turns.length ? <div className="simple-empty"><BookOpen size={36} /><h3>A blank page, for now.</h3><p>Your transcript and replies will show up here.</p><button className="button primary" onClick={() => setTab("desk")}>Open live desk</button></div> : <div className="notes-list">{turns.map(t => <article key={t.id}><div className="turn-meta">{t.source === "demo" ? "SCRIPTED EXAMPLE" : t.time}<button className="icon-button" aria-label={t.saved ? "Remove bookmark" : "Bookmark utterance"} onClick={() => patchTurn(t.id, { saved: !t.saved })}><Bookmark size={16} fill={t.saved ? "currentColor" : "none"} /></button></div><h3 lang="de">{t.text}</h3><p>{t.answer?.translation || "Not translated yet."}</p>{t.answer?.german && <div className="note-answer"><span>YOUR REPLY · {t.mode}</span><p lang="de">{t.answer.german}</p><small>{t.answer.english}</small></div>}</article>)}</div>}<div className="notes-footer"><ShieldCheck size={15} />Notes are kept in this tab’s memory. Export anything you want to keep.<button onClick={clearSession} disabled={!turns.length}><Trash2 size={14} />Clear session</button></div></section>}
-        {tab === "audio" && <div className="audio-grid"><section className="panel audio-card"><span className="audio-card-icon"><Mic size={25} /></span><h2>Give your mic a moment.</h2><p>Test the actual Chromebook at the distance you’ll use it. This meter measures volume, not recognition accuracy.</p><div className="large-meter">{Array.from({ length: 32 }, (_, i) => <i key={i} style={{ background: level > i / 32 ? "var(--orange)" : undefined }} />)}</div><div className="meter-label"><span>QUIET</span><span>LOUD</span></div><button className="button primary" onClick={testMicrophone}>{testing ? <Square size={16} /> : <Mic size={17} />}{testing ? "Stop mic test" : "Test microphone"}</button><p className="subtle-note">Mic test stays on your device. No transcription is started.</p></section><section className="panel audio-card"><span className="audio-card-icon violet"><Waves size={25} /></span><div className="card-title-with-tag"><h2>One voice in the room.</h2><span className="small-tag">EXPERIMENTAL</span></div><p>A voice sample can support a future speaker filter. Reference preview is available now; voice isolation is not connected.</p><label className="upload-zone"><Plus size={22} /><strong>{reference ? "Choose a different reference" : "Preview a voice reference"}</strong><span>Audio file · up to 10 MB · stays in this tab</span><input type="file" accept="audio/*" onChange={e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 10 * 1024 * 1024) { setNotice("Please choose an audio reference under 10 MB."); return; } if (referenceRef.current) URL.revokeObjectURL(referenceRef.current); const url = URL.createObjectURL(file); referenceRef.current = url; setReference({ name: file.name, url }); e.target.value = ""; }} /></label>{reference && <div className="reference-preview"><div><span>{reference.name}</span><button className="icon-button" aria-label="Remove voice reference" onClick={() => { URL.revokeObjectURL(reference.url); referenceRef.current = null; setReference(null); }}><X size={15} /></button></div><audio controls src={reference.url} /><small>Preview only. This sample does not filter live audio.</small></div>}<div className="info-callout"><ShieldCheck size={17} /><span>Use a reference willingly provided by its speaker. Nothing is uploaded from this panel.</span></div></section></div>}
-        <footer className="workspace-footer"><span>LEUTE! <span className="footer-separator">/</span> Find your words.</span><button onClick={() => setSettings(true)}><span className={`connection-indicator ${config?.configured ? "connected" : ""}`} />{config === null ? "Checking connection" : config.configured ? "Meta connected" : "AI connection needed"}</button></footer>
-      </div>
+          <div className="mic-status" role="status">
+            <div className={`mini-meter ${demoRunning ? "demo-meter" : ""}`} aria-hidden="true">{Array.from({ length: 13 }, (_, i) => <i key={i} style={{ height: 6 + (i % 5) * 4, background: level > i / 13 ? "var(--ink)" : undefined }} />)}</div>
+            <span>{listening ? "Mic is on" : connecting ? "One sec…" : demoRunning ? "Demo running" : "Mic is off"}</span>
+            {listening && <time>{Math.floor(elapsed / 60).toString().padStart(2, "0")}:{(elapsed % 60).toString().padStart(2, "0")}</time>}
+          </div>
+        </section>
+
+        {typed && <form className="type-form paper-panel" onSubmit={submitTyped}>
+          <label htmlFor="german-input">What did they say?</label>
+          <textarea id="german-input" autoFocus maxLength={2500} value={input} onChange={e => setInput(e.target.value)} placeholder="Paste some German here…" />
+          <div><button type="button" className="plain-button" onClick={() => setTyped(false)}>Cancel</button><button className="solid-button" disabled={!input.trim()}>Do the thing</button></div>
+        </form>}
+
+        <section className="mode-picker" aria-label="Reply mode">
+          {modes.map(m => <button key={m.id} className={`mode-button mode-${m.id} ${mode === m.id ? "chosen" : ""}`} onClick={() => modeSelect(m.id)} aria-pressed={mode === m.id}>
+            <span className="mode-emoji" aria-hidden="true">{m.emoji}</span><span><strong>{m.title}</strong><small>{m.subtitle}</small></span><span className="mode-check">{mode === m.id && <Check size={14} strokeWidth={3} />}</span>
+          </button>)}
+        </section>
+
+        <div className="desk-grid">
+          <section className="paper-panel transcript-panel">
+            <div className="panel-heading"><h1><AudioLines size={19} />WHAT WAS SAID</h1><span className="language-tag">DE / EN</span></div>
+            <div className="transcript-scroll" ref={scrollRef} role="log" aria-label="Conversation transcript" aria-live="polite">
+              {!turns.length && !partial && <div className="empty-conversation"><div className="huh-bubble" aria-hidden="true">ÄH<span>?</span></div><p>Waiting for German…</p></div>}
+              {turns.map(t => <button key={t.id} className={`transcript-turn ${active?.id === t.id ? "active" : ""}`} onClick={() => { setSelected(t.id); if (t.mode) { setMode(t.mode); modeRef.current = t.mode; } if (!t.answer && !t.busy) void analyze(t); }}>
+                <div className="turn-meta"><span>{t.source === "demo" ? "DEMO" : t.source === "typed" ? "TYPED" : t.speaker ? `SPEAKER ${t.speaker}` : "GERMAN"}</span><time>{t.time}</time>{t.saved && <Bookmark size={12} />}</div>
+                <p lang="de">{t.text}</p><div className="turn-translation">{t.answer?.translation || (t.busy ? "Translating…" : "Click to translate")}</div>
+              </button>)}
+              {partial && <div className="transcript-turn partial"><div className="turn-meta">{demoRunning ? "DEMO · SIMULATED AUDIO" : "LISTENING"}</div><p lang="de">{partial}<span className="text-cursor" /></p></div>}
+            </div>
+            <div className="transcript-bottom"><span>Bad audio = questionable subtitles.</span><button className="text-button" onClick={clearSession} disabled={!turns.length && !partial}><Trash2 size={14} />Clear</button></div>
+          </section>
+
+          <section className={`reply-card mode-accent-${mode}`} aria-live="polite" aria-busy={active?.busy || false}>
+            <div className="panel-heading"><h2>SAY THIS</h2><span className="reply-mode-tag">{chosenMode.emoji} {chosenMode.title}</span></div>
+            {active?.source === "demo" && <span className="example-label">PREWRITTEN DEMO</span>}
+            {active?.error ? <div className="reply-error"><HelpCircle size={30} /><h3>Technical difficulties.</h3><p>{active.error}</p><button className="solid-button" onClick={() => config?.configured ? void analyze(active) : setSettings(true)}>{config?.configured ? "Try again" : "Open settings"}</button></div> : active?.answer?.german ? <div className="answer-content">
+              <p className="german-reply" lang="de">{active.answer.german}</p><p className="english-reply">{active.answer.english || "Translating the reply…"}</p>
+              {mode === "gibberish" && <span className="nonsense-label">Made-up German. On purpose.</span>}
+              {pronounce && <div className="pronunciation"><span>ROUGH PRONUNCIATION</span><p>{active.answer.pronunciation}</p></div>}
+            </div> : <div className="reply-empty"><span className="reply-doodle" aria-hidden="true">{active?.busy ? "…" : "¯\\_(ツ)_/¯"}</span><h3>{active?.busy ? "Cooking up a reply…" : "No comeback yet."}</h3></div>}
+            <div className="reply-actions">
+              <button onClick={copyReply} disabled={!active?.answer?.german}>{copied ? <Check size={16} /> : <Copy size={16} />}{copied ? "Copied" : "Copy"}</button>
+              <button onClick={speakReply} disabled={!active?.answer?.german} aria-label="Hear the German reply"><Volume2 size={18} /><span>Hear it</span></button>
+              <button onClick={() => setPronounce(!pronounce)} disabled={!active?.answer?.pronunciation} aria-pressed={pronounce} aria-label="Show pronunciation"><span className="phonetic-icon">Aa</span><span>Pronounce</span></button>
+              <button className="regenerate" aria-label="Regenerate reply" disabled={!active || active.busy} onClick={() => active && void analyze(active)}><RotateCcw size={17} /><span>Again</span></button>
+            </div>
+          </section>
+        </div>
+      </>}
+
+      {tab === "notes" && <section className="paper-panel notes-panel">
+        <div className="panel-heading"><h1>THE EVIDENCE <span className="count">{turns.length}</span></h1><div className="heading-actions"><button className="plain-button" onClick={exportNotes} disabled={!turns.length}><Download size={16} />Save text</button><button className="icon-button" aria-label="Back to listening" onClick={() => setTab("desk")}><X size={20} /></button></div></div>
+        {!turns.length ? <div className="simple-empty"><span aria-hidden="true">📋</span><h2>No evidence yet.</h2><button className="solid-button" onClick={() => setTab("desk")}>Back to listening</button></div> : <div className="notes-list">{turns.map(t => <article key={t.id}><div className="turn-meta">{t.source === "demo" ? "DEMO" : t.time}<button className="icon-button" aria-label={t.saved ? "Remove bookmark" : "Bookmark utterance"} onClick={() => patchTurn(t.id, { saved: !t.saved })}><Bookmark size={17} fill={t.saved ? "currentColor" : "none"} /></button></div><h3 lang="de">{t.text}</h3><p>{t.answer?.translation || "Not translated yet."}</p>{t.answer?.german && <div className="note-answer"><span>{modes.find(m => m.id === t.mode)?.title || "REPLY"}</span><p lang="de">{t.answer.german}</p><small>{t.answer.english}</small></div>}</article>)}</div>}
+        <div className="notes-footer"><span>Gone when you reload. Save it if you want it.</span><button className="text-button" onClick={clearSession} disabled={!turns.length}><Trash2 size={14} />Clear</button></div>
+      </section>}
+
+      {tab === "audio" && <section className="audio-section"><div className="section-heading"><h1>MIC STUFF</h1><button className="plain-button" onClick={() => setTab("desk")}>Back to listening</button></div><div className="audio-grid">
+        <section className="paper-panel audio-card"><h2>Can it hear anything?</h2><p>Try your Chromebook from the seat you’ll use. This checks volume, not word accuracy.</p><div className="large-meter">{Array.from({ length: 32 }, (_, i) => <i key={i} style={{ background: level > i / 32 ? "var(--purple)" : undefined }} />)}</div><div className="meter-label"><span>CRICKETS</span><span>VERY LOUD</span></div><button className="solid-button" onClick={testMicrophone}>{testing ? <Square size={16} /> : <Mic size={17} />}{testing ? "Stop test" : "Test mic"}</button><small>Local test. No transcription.</small></section>
+        <section className="paper-panel audio-card"><h2>Voice reference</h2><span className="not-ready-tag">FILTER NOT CONNECTED</span><p>You can preview a sample here. It won’t isolate anyone’s voice yet.</p><label className="upload-zone"><Headphones size={24} /><strong>{reference ? "Pick another sample" : "Pick an audio file"}</strong><span>Up to 10 MB. Stays in this tab.</span><input type="file" accept="audio/*" onChange={e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 10 * 1024 * 1024) { setNotice("Pick a file under 10 MB."); return; } if (referenceRef.current) URL.revokeObjectURL(referenceRef.current); const url = URL.createObjectURL(file); referenceRef.current = url; setReference({ name: file.name, url }); e.target.value = ""; }} /></label>
+          {reference && <div className="reference-preview"><div><span>{reference.name}</span><button className="icon-button" aria-label="Remove voice reference" onClick={() => { URL.revokeObjectURL(reference.url); referenceRef.current = null; setReference(null); }}><X size={16} /></button></div><audio controls src={reference.url} /><small>Preview only. Nothing is uploaded.</small></div>}<small>Use a sample its speaker has agreed to share.</small>
+        </section>
+      </div></section>}
+
+      <footer className="site-footer"><span>Use the mic with everyone’s permission.</span><button className="connection-button" onClick={() => setSettings(true)}>{config === null ? "Connecting…" : config.configured ? <><Check size={14} />Connected</> : "Set up connection"}</button></footer>
     </main>
-    {notice && <div className="toast" role="status"><HelpCircle size={18} /><span>{notice}</span><button className="icon-button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={16} /></button></div>}
-    {(settings || help) && <div className="modal-backdrop" onClick={() => { setSettings(false); setHelp(false); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" onClick={e => e.stopPropagation()} onKeyDown={e => { if (e.key !== "Tab") return; const nodes = e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled])'); const first = nodes[0]; const last = nodes[nodes.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); } }}><button className="modal-close icon-button" aria-label="Close dialog" onClick={() => { setSettings(false); setHelp(false); }} autoFocus><X size={21} /></button><span className="eyebrow">A LITTLE FINE-TUNING</span><h2 id="dialog-title">{settings ? "Make yourself heard." : "Your next words start here."}</h2>{settings ? <>
-      <div className={`connection-card ${config?.configured ? "is-connected" : ""}`}><CheckCircle2 size={22} /><div><strong>{config?.configured ? "Meta API is configured" : "Connect Meta to go live"}</strong><p>{config?.configured ? "Live transcription, translation, and replies are ready to test." : "Add MODEL_API_KEY as a server secret to use your dev.meta.ai credits. Never put it in browser code or GitHub."}</p>{!config?.configured && <a href="https://dev.meta.ai/" target="_blank" rel="noreferrer">Open Meta dashboard</a>}</div></div>
-      <div className="settings-field"><label htmlFor="speech-engine">Speech engine</label><select id="speech-engine" value={engine} disabled={listening || connecting} onChange={e => setEngine(e.target.value as "meta" | "browser")}><option value="meta">Meta streaming · API key required</option><option value="browser">Chrome captions · transcript only without AI key</option></select><p>Chrome speech recognition may send audio to the browser’s speech service. Availability depends on browser and school settings.</p></div>
-      <label className="toggle-row"><div><strong>Reduce background noise</strong><span>Browser microphone processing. Does not isolate one speaker.</span></div><input type="checkbox" checked={noise} disabled={listening || testing || connecting} onChange={e => setNoise(e.target.checked)} /></label>
-      <label className="toggle-row"><div><strong>Label different speakers</strong><span>Meta only. Session labels, not verified identities. May add delay.</span></div><input type="checkbox" checked={speakers} disabled={listening || connecting || engine !== "meta"} onChange={e => setSpeakers(e.target.checked)} /></label>
-      <label className="toggle-row"><div><strong>Translate and reply automatically</strong><span>Process the latest utterance. Click older captions to revisit.</span></div><input type="checkbox" checked={autoReply} onChange={e => setAutoReply(e.target.checked)} /></label>
-      <p className="settings-footnote">Audio streams to the selected speech service. Text goes to Meta for translation and replies. The app saves no audio or transcript history to its server. Provider retention policies still apply. Sessions stop after 20 minutes.</p><button className="button primary full-width" onClick={() => setSettings(false)}>All set</button>
-    </> : <><div className="how-step"><span><Mic size={21} /></span><div><h3>Catch the conversation.</h3><p>Start listening with the speaker’s permission, or type a phrase. German captions appear as speech arrives.</p></div></div><div className="how-step"><span><Languages size={21} /></span><div><h3>Get the meaning.</h3><p>English translation appears under the completed utterance. Noisy or overlapping speech can be misheard.</p></div></div><div className="how-step"><span><Sparkles size={21} /></span><div><h3>Choose your energy.</h3><p>Pick a natural, fluent, funny, or deliberately nonsensical reply. The original translation stays accurate in every mode.</p></div></div><div className="info-callout"><ShieldCheck size={18} /><span>This is a suggestion tool. You decide what to say. Example sessions use prewritten content; voice isolation is not active.</span></div><button className="button primary full-width" onClick={() => { setHelp(false); runDemo(); }}>Try an example</button></>}</section></div>}
+
+    {notice && <div className="toast" role="status"><HelpCircle size={19} /><span>{notice}</span><button className="icon-button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={17} /></button></div>}
+    {(settings || help) && <div className="modal-backdrop" onClick={() => { setSettings(false); setHelp(false); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" onClick={e => e.stopPropagation()} onKeyDown={e => { if (e.key !== "Tab") return; const nodes = e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), summary'); const first = nodes[0]; const last = nodes[nodes.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); } }}>
+      <button className="modal-close icon-button" aria-label="Close dialog" onClick={() => { setSettings(false); setHelp(false); }} autoFocus><X size={23} /></button>
+      <h2 id="dialog-title">{settings ? "THE BORING STUFF" : "HOW TO USE THIS THING"}</h2>
+      {settings ? <>
+        <div className="connection-card"><strong>{config?.configured ? "Meta connected" : "Meta key needed"}</strong>{!config?.configured && <><p>Add MODEL_API_KEY to the server secrets. Keep the key out of GitHub and browser code.</p><a href="https://dev.meta.ai/" target="_blank" rel="noreferrer">Meta dashboard</a></>}</div>
+        <div className="settings-field"><label htmlFor="speech-engine">Microphone service</label><select id="speech-engine" value={engine} disabled={listening || connecting} onChange={e => setEngine(e.target.value as "meta" | "browser")}><option value="meta">Meta</option><option value="browser">Chrome captions</option></select><small>Chrome captions need browser support. Translation and replies still use Meta.</small></div>
+        <label className="toggle-row"><div><strong>Reduce background noise</strong><span>Mic processing, not a voice filter.</span></div><input type="checkbox" checked={noise} disabled={listening || testing || connecting} onChange={e => setNoise(e.target.checked)} /></label>
+        <label className="toggle-row"><div><strong>Label different speakers</strong><span>Meta only. Can add delay.</span></div><input type="checkbox" checked={speakers} disabled={listening || connecting || engine !== "meta"} onChange={e => setSpeakers(e.target.checked)} /></label>
+        <label className="toggle-row"><div><strong>Auto-translate and reply</strong><span>Off? Click a caption to process it.</span></div><input type="checkbox" checked={autoReply} onChange={e => setAutoReply(e.target.checked)} /></label>
+        <details className="privacy-details"><summary>Where does the audio go?</summary><p>Live audio goes to Meta or Chrome’s speech service. Text goes to Meta. This app saves no recordings or transcript history on its server; provider retention policies still apply. Listening stops after 20 minutes.</p></details>
+        <div className="modal-bottom"><button className="text-button" onClick={() => { setSettings(false); setHelp(true); }}>How to use this</button><button className="solid-button" onClick={() => setSettings(false)}>Done</button></div>
+      </> : <><ol className="how-list"><li>Hit <strong>Listen</strong> or type some German.</li><li>Pick <strong>Normal, Tryhard, Unhinged, or Gibberish.</strong></li><li>Read the translation and choose what to say.</li></ol><p className="help-note">Demo uses prewritten examples. Gibberish is intentionally wrong. Voice isolation isn’t connected.</p><button className="solid-button" onClick={() => { setHelp(false); runDemo(); }}>Try the demo</button></>}
+    </section></div>}
   </div>;
 }
