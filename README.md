@@ -27,6 +27,17 @@ The example session works immediately without any credentials. It is prewritten 
 - Local microphone level test and local audio-reference preview.
 - Responsive desktop/mobile layout and reduced-motion support.
 
+### Reply modes
+
+| Mode | Intended response |
+| --- | --- |
+| Normal | Short, everyday A2/B1 German. |
+| Tryhard | Deliberately excessive C2 academic German, long real compound nouns, and complex clauses. |
+| Unhinged | Punchy dark situational humor with uncensored German swearing. |
+| Gibberish | Invented German-sounding syllables with no literal meaning or fabricated English translation. |
+
+The original speech is translated accurately in every mode. Tryhard has a larger output budget for its longer reply, English meaning, and pronunciation.
+
 **Voice extraction is not implemented.** Audio references are previewed locally; they are not uploaded or used to filter microphone audio. Integrating an actual target-speaker extraction service and evaluating it on German classroom audio is separate work.
 
 ## Meta configuration

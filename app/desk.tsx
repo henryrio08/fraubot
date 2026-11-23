@@ -11,9 +11,9 @@ type Tab = "desk" | "notes" | "audio";
 type Recognition = { lang: string; continuous: boolean; interimResults: boolean; onresult: ((event: any) => void) | null; onerror: ((event: any) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort: () => void };
 const modes: { id: Mode; title: string; subtitle: string; emoji: string }[] = [
   { id: "natural", title: "Normal", subtitle: "Actual German", emoji: "😇" },
-  { id: "fluent", title: "Tryhard", subtitle: "Suspiciously fluent", emoji: "🤓" },
-  { id: "funny", title: "Unhinged", subtitle: "Correct grammar, wrong planet", emoji: "🦆" },
-  { id: "gibberish", title: "Gibberish", subtitle: "Barely a language", emoji: "🧌" },
+  { id: "fluent", title: "Tryhard", subtitle: "Academic overkill", emoji: "🤓" },
+  { id: "funny", title: "Unhinged", subtitle: "Swearing + dark humor", emoji: "🦆" },
+  { id: "gibberish", title: "Gibberish", subtitle: "100% fake German", emoji: "🧌" },
 ];
 const now = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 const uid = () => crypto.randomUUID();
