@@ -55,6 +55,6 @@ npm run typecheck
 npm run build
 ```
 
-Tests cover input limits, untrusted transcript handling, streamed SSE parsing across chunk boundaries, fixed provider destinations, secret redaction, cross-origin rejection, and PCM conversion at multiple input sample rates. Live provider quality and latency require a funded Meta key and representative microphone audio.
+Tests cover input limits, untrusted transcript handling, streamed SSE parsing across chunk boundaries, fixed provider destinations, secret redaction, cross-origin rejection, binary WebSocket frame normalization, and PCM conversion at multiple input sample rates. Live provider quality and latency require a funded Meta key and representative microphone audio.
 
 Hosted access is enforced by Sites. Additional per-isolate rate limiting is best-effort protection, not a durable account spending cap. Configure spending limits in the Meta dashboard before broader sharing. No credentials or voice recordings are tracked in Git.

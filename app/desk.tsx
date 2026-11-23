@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { AudioLines, BookOpen, Check, ChevronDown, Copy, Download, Headphones, HelpCircle, Keyboard, Languages, LoaderCircle, Mic, Play, Plus, Radio, RotateCcw, Settings2, ShieldCheck, Sparkles, Square, Trash2, Volume2, Waves, X, Zap, MessageSquare, FlaskConical, Smile, WandSparkles, Bookmark, CheckCircle2 } from "lucide-react";
+import { AudioLines, BookOpen, Check, ChevronDown, Copy, Download, Headphones, HelpCircle, Keyboard, Languages, LoaderCircle, Mic, Play, Plus, Radio, RotateCcw, Settings2, ShieldCheck, Sparkles, Square, Trash2, Volume2, Waves, X, Zap, MessageSquare, Smile, WandSparkles, Bookmark, CheckCircle2 } from "lucide-react";
 import { consumeEvents, partialResult, validResult } from "../lib/assist.mjs";
 import { demoAnswer, samples, type Mode, type Answer } from "../lib/demo";
 
-type Turn = { id: string; text: string; time: string; source: "live" | "typed" | "demo"; sample?: number; answer?: Answer; mode?: Mode; busy?: boolean; error?: string; duration?: number; saved?: boolean; speaker?: string };
+type Turn = { id: string; text: string; time: string; source: "live" | "typed" | "demo"; sample?: number; answer?: Answer; mode?: Mode; busy?: boolean; error?: string; duration?: number; saved?: boolean; speaker?: string; ordinal?: number };
 type Config = { configured: boolean; provider: string };
 type Tab = "desk" | "notes" | "audio";
 type Recognition = { lang: string; continuous: boolean; interimResults: boolean; onresult: ((event: any) => void) | null; onerror: ((event: any) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort: () => void };
@@ -28,12 +28,12 @@ export default function Desk() {
   const [level, setLevel] = useState(0); const [testing, setTesting] = useState(false); const [noise, setNoise] = useState(true);
   const [engine, setEngine] = useState<"meta" | "browser">("meta"); const [speakers, setSpeakers] = useState(false); const [autoReply, setAutoReply] = useState(true);
   const [reference, setReference] = useState<{ name: string; url: string } | null>(null); const [copied, setCopied] = useState(false); const [pronounce, setPronounce] = useState(false); const [elapsed, setElapsed] = useState(0);
-  const modeRef = useRef(mode); const autoRef = useRef(autoReply); const liveRef = useRef(false); const demoIndex = useRef(0);
+  const modeRef = useRef(mode); const autoRef = useRef(autoReply); const liveRef = useRef(false); const demoIndex = useRef(0); const sequenceRef = useRef(0);
   const streamRef = useRef<MediaStream | null>(null); const contextRef = useRef<AudioContext | null>(null); const socketRef = useRef<WebSocket | null>(null);
   const recognitionRef = useRef<Recognition | null>(null); const meterRef = useRef(0); const requestRef = useRef<AbortController | null>(null);
   const demoTimers = useRef<ReturnType<typeof setTimeout>[]>([]); const scrollRef = useRef<HTMLDivElement>(null); const referenceRef = useRef<string | null>(null); const startingRef = useRef(false); const sessionGeneration = useRef(0);
 
-  const updateTurns = (fn: (items: Turn[]) => Turn[]) => setTurns(items => { const next = fn(items); turnsRef.current = next; return next; });
+  const updateTurns = (fn: (items: Turn[]) => Turn[]) => { const next = fn(turnsRef.current); turnsRef.current = next; setTurns(next); };
   const patchTurn = (id: string, patch: Partial<Turn>) => updateTurns(items => items.map(t => t.id === id ? { ...t, ...patch } : t));
   useEffect(() => { modeRef.current = mode; }, [mode]); useEffect(() => { autoRef.current = autoReply; }, [autoReply]);
   useEffect(() => { fetch("/api/config", { cache: "no-store" }).then(async r => { if (!r.ok) throw new Error(); const value = await r.json() as Config; if (typeof value.configured !== "boolean") throw new Error(); setConfig(value); }).catch(() => setNotice("Could not check the AI connection. Reload to try again.")); }, []);
@@ -75,7 +75,7 @@ export default function Desk() {
     patchTurn(turn.id, { busy: true, error: undefined, mode: chosen, answer: undefined }); const start = performance.now();
     let resultText = ""; let completed = false;
     try {
-      const response = await fetch("/api/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: turn.text, mode: chosen, context: turnsRef.current.filter(t => t.id !== turn.id && t.source !== "demo").slice(-4).map(t => t.text) }), signal: controller.signal });
+      const response = await fetch("/api/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: turn.text, mode: chosen, context: turnsRef.current.slice(0, turnsRef.current.findIndex(t => t.id === turn.id)).filter(t => t.source !== "demo").slice(-4).map(t => t.text) }), signal: controller.signal });
       if (!response.ok) { const err = await response.json() as { error?: string }; throw new Error(err.error || "Could not generate a reply."); }
       if (!response.body) throw new Error("The response was empty.");
       await consumeEvents(response.body, (event: any) => {
@@ -89,11 +89,13 @@ export default function Desk() {
       patchTurn(turn.id, { answer, busy: false, duration: performance.now() - start });
     } catch (error) { if (!controller.signal.aborted) patchTurn(turn.id, { busy: false, answer: undefined, error: error instanceof Error ? error.message : "Connection interrupted." }); }
   }
-  function addFinal(text: string, source: Turn["source"] = "live", speaker?: string, sample?: number) {
+  function addFinal(text: string, source: Turn["source"] = "live", speaker?: string, sample?: number, ordinal = ++sequenceRef.current, preservePartial = false) {
     if (!text.trim()) return;
-    const turn: Turn = { id: uid(), text: text.trim(), time: now(), source, sample, speaker };
-    updateTurns(items => [...items, turn].slice(-80)); setSelected(turn.id); setPartial("");
-    if (autoRef.current || source !== "live") void analyze(turn);
+    const turn: Turn = { id: uid(), text: text.trim(), time: now(), source, sample, speaker, ordinal };
+    const isLatest = !turnsRef.current.some(t => (t.ordinal || 0) > ordinal);
+    updateTurns(items => [...items, turn].sort((a, b) => (a.ordinal || 0) - (b.ordinal || 0)).slice(-80));
+    if (!preservePartial) setPartial("");
+    if (isLatest) { setSelected(turn.id); if (autoRef.current || source !== "live") void analyze(turn); }
   }
   async function startSession() {
     if (listening || connecting || demoRunning) { stopDemo(); stopCapture(); return; }
@@ -115,7 +117,7 @@ export default function Desk() {
       } else {
         await context.audioWorklet.addModule("/pcm-worklet.js");
         const socket = new WebSocket(`${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/api/speech?speakers=${speakers ? "1" : "0"}`); socketRef.current = socket;
-        let ready = false; const labels = new Map<number, string>(); let currentTurn = 0;
+        let ready = false; const labels = new Map<number, string>(); const ordering = new Map<number, number>(); let currentTurn = 0;
         const timer = setTimeout(() => { if (!ready) { setNotice("Speech connection timed out. Check Meta API access and school network settings."); stopCapture(false); } }, 20000);
         socket.onmessage = event => {
           try {
@@ -125,10 +127,10 @@ export default function Desk() {
               const node = new AudioWorkletNode(context, "pcm-stream"); const silent = context.createGain(); silent.gain.value = 0;
               source.connect(node); node.connect(silent).connect(context.destination);
               node.port.onmessage = e => { if (liveRef.current && socket.readyState === WebSocket.OPEN) { if (socket.bufferedAmount > 240000) { setNotice("The network is falling behind. Session stopped to avoid delayed captions."); stopCapture(false); } else socket.send(e.data); } };
-            } else if (message.type === "speechStart") { currentTurn = message.turnId; }
+            } else if (message.type === "speechStart") { currentTurn = message.turnId; ordering.set(currentTurn, ++sequenceRef.current); }
             else if (message.type === "speaker") { labels.set(currentTurn, message.label); }
             else if (message.type === "transcript") setPartial(message.transcript || "");
-            else if (message.type === "speechComplete") { addFinal(message.transcript, "live", labels.get(message.turnId)); labels.delete(message.turnId); }
+            else if (message.type === "speechComplete") { addFinal(message.transcript, "live", labels.get(message.turnId), undefined, ordering.get(message.turnId), message.turnId !== currentTurn); labels.delete(message.turnId); ordering.delete(message.turnId); }
             else if (message.type === "error") { setNotice(message.message || "Speech service error."); stopCapture(false); }
           } catch { setNotice("An unreadable speech event was received."); }
         };
@@ -178,7 +180,7 @@ export default function Desk() {
             <section className="transcript-panel panel"><div className="panel-header"><div><span className="section-icon"><AudioLines size={19} /></span><h2>The conversation</h2></div><span className="small-tag">DE <span>/</span> EN</span></div>
               <div className="transcript-scroll" ref={scrollRef} role="log" aria-label="Conversation transcript" aria-live="polite">
                 {!turns.length && !partial && <div className="empty-conversation"><div className="empty-art" aria-hidden="true"><div className="art-caption">HALLO, WELT.</div><div className="bubble german-bubble">Na, alles klar?<span className="bubble-tail" /></div><div className="bubble english-bubble">Getting there.<span className="mini-spark">✳</span></div><div className="art-wave">{[10, 19, 12, 29, 40, 22, 14, 32, 18, 11, 25, 14].map((v, i) => <i key={i} style={{ height: v }} />)}</div></div><h3>Let’s catch the conversation.</h3><p>Start listening to see German captions<br />and the English meaning, side by side.</p><button className="text-button" onClick={runDemo}>Take it for a test drive <Play size={13} /></button></div>}
-                {turns.map(t => <button key={t.id} className={`transcript-turn ${active?.id === t.id ? "active" : ""}`} onClick={() => { setSelected(t.id); if (!t.answer && !t.busy) void analyze(t); }}><div className="turn-meta"><span>{t.source === "demo" ? "EXAMPLE" : t.source === "typed" ? "TYPED" : t.speaker ? `SPEAKER ${t.speaker}` : "HEARD IN GERMAN"}</span><time>{t.time}</time>{t.saved && <Bookmark size={12} />}</div><p lang="de">{t.text}</p><div className="turn-translation">{t.answer?.translation || (t.busy ? "Finding the meaning…" : "Select to translate")}</div></button>)}
+                {turns.map(t => <button key={t.id} className={`transcript-turn ${active?.id === t.id ? "active" : ""}`} onClick={() => { setSelected(t.id); if (t.mode) { setMode(t.mode); modeRef.current = t.mode; } if (!t.answer && !t.busy) void analyze(t); }}><div className="turn-meta"><span>{t.source === "demo" ? "EXAMPLE" : t.source === "typed" ? "TYPED" : t.speaker ? `SPEAKER ${t.speaker}` : "HEARD IN GERMAN"}</span><time>{t.time}</time>{t.saved && <Bookmark size={12} />}</div><p lang="de">{t.text}</p><div className="turn-translation">{t.answer?.translation || (t.busy ? "Finding the meaning…" : "Select to translate")}</div></button>)}
                 {partial && <div className="transcript-turn partial"><div className="turn-meta">{demoRunning ? "EXAMPLE • SIMULATED CAPTIONS" : "HEARING NOW"}<span className="typing-dots">•••</span></div><p lang="de">{partial}<span className="text-cursor" /></p></div>}
               </div>
               <div className="capture-controls"><div className="microphone-status"><div className={`mini-meter ${demoRunning ? "demo-meter" : ""}`}>{Array.from({ length: 15 }, (_, i) => <i key={i} style={{ height: 5 + (i % 5) * 3, background: level > i / 15 ? "var(--orange)" : undefined }} />)}</div><span>{listening ? "Microphone is on" : connecting ? "Requesting microphone" : "Microphone is off"}</span><button className="icon-button" onClick={() => setSettings(true)} aria-label="Microphone settings"><ChevronDown size={15} /></button></div><div className="capture-actions"><button className={`button primary ${listening || connecting ? "recording" : ""}`} onClick={startSession}>{connecting ? <LoaderCircle className="spin" size={18} /> : listening || demoRunning ? <Square size={16} fill="currentColor" /> : <Mic size={18} />}{listening || connecting || demoRunning ? "Stop listening" : "Start listening"}</button><button className="button keyboard-button" onClick={() => setTyped(!typed)} aria-expanded={typed} aria-label="Type German instead"><Keyboard size={20} /></button></div>{typed && <form className="type-form" onSubmit={submitTyped}><label htmlFor="german-input">Type or paste what was said</label><textarea id="german-input" autoFocus maxLength={2500} value={input} onChange={e => setInput(e.target.value)} placeholder="Was habt ihr am Wochenende gemacht?" /><button className="button secondary" disabled={!input.trim()}>Translate & reply</button></form>}<p className="capture-note">Listen with everyone’s knowledge and permission.<br />Audio is processed by your selected speech provider.</p></div>
@@ -198,7 +200,7 @@ export default function Desk() {
       </div>
     </main>
     {notice && <div className="toast" role="status"><HelpCircle size={18} /><span>{notice}</span><button className="icon-button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={16} /></button></div>}
-    {(settings || help) && <div className="modal-backdrop" onClick={() => { setSettings(false); setHelp(false); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" onClick={e => e.stopPropagation()}><button className="modal-close icon-button" aria-label="Close dialog" onClick={() => { setSettings(false); setHelp(false); }} autoFocus><X size={21} /></button><span className="eyebrow">A LITTLE FINE-TUNING</span><h2 id="dialog-title">{settings ? "Make yourself heard." : "Your next words start here."}</h2>{settings ? <>
+    {(settings || help) && <div className="modal-backdrop" onClick={() => { setSettings(false); setHelp(false); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" onClick={e => e.stopPropagation()} onKeyDown={e => { if (e.key !== "Tab") return; const nodes = e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled])'); const first = nodes[0]; const last = nodes[nodes.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); } }}><button className="modal-close icon-button" aria-label="Close dialog" onClick={() => { setSettings(false); setHelp(false); }} autoFocus><X size={21} /></button><span className="eyebrow">A LITTLE FINE-TUNING</span><h2 id="dialog-title">{settings ? "Make yourself heard." : "Your next words start here."}</h2>{settings ? <>
       <div className={`connection-card ${config?.configured ? "is-connected" : ""}`}><CheckCircle2 size={22} /><div><strong>{config?.configured ? "Meta API is configured" : "Connect Meta to go live"}</strong><p>{config?.configured ? "Live transcription, translation, and replies are ready to test." : "Add MODEL_API_KEY as a server secret to use your dev.meta.ai credits. Never put it in browser code or GitHub."}</p>{!config?.configured && <a href="https://dev.meta.ai/" target="_blank" rel="noreferrer">Open Meta dashboard</a>}</div></div>
       <div className="settings-field"><label htmlFor="speech-engine">Speech engine</label><select id="speech-engine" value={engine} disabled={listening || connecting} onChange={e => setEngine(e.target.value as "meta" | "browser")}><option value="meta">Meta streaming · API key required</option><option value="browser">Chrome captions · transcript only without AI key</option></select><p>Chrome speech recognition may send audio to the browser’s speech service. Availability depends on browser and school settings.</p></div>
       <label className="toggle-row"><div><strong>Reduce background noise</strong><span>Browser microphone processing. Does not isolate one speaker.</span></div><input type="checkbox" checked={noise} disabled={listening || testing || connecting} onChange={e => setNoise(e.target.checked)} /></label>

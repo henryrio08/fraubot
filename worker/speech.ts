@@ -1,4 +1,5 @@
 import { sameOrigin, takeRateLimit } from "../lib/api.mjs";
+import { normalizeAudioFrame } from "../lib/audio.mjs";
 type SpeechEnv = { MODEL_API_KEY?: string; META_SPEECH_MODEL?: string };
 export async function handleSpeech(request: Request, env: SpeechEnv): Promise<Response> {
   if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return Response.json({ error: "WebSocket required." }, { status: 426 });
@@ -13,6 +14,7 @@ export async function handleSpeech(request: Request, env: SpeechEnv): Promise<Re
   } catch { return Response.json({ error: "Could not connect to Meta speech." }, { status: 502 }); }
   const pair = new WebSocketPair(); const client = pair[0]; const server = pair[1]; server.accept();
   let ready = false; let ended = false; let bytes = 0; let closed = false;
+  let sendQueue = Promise.resolve();
   const close = (code = 1000, reason = "Session ended") => {
     if (closed) return; closed = true;
     clearTimeout(expiry); clearTimeout(deadline);
@@ -37,12 +39,17 @@ export async function handleSpeech(request: Request, env: SpeechEnv): Promise<Re
   server.addEventListener("message", event => {
     if (!ready || ended) return;
     if (typeof event.data === "string") {
-      if (event.data === '{"type":"endStream"}') { ended = true; upstream.send(event.data); }
+      if (event.data === '{"type":"endStream"}') { ended = true; sendQueue = sendQueue.then(() => { if (!closed) upstream.send('{"type":"endStream"}'); }).catch(() => close(1011, "Audio send failed")); }
       return;
     }
-    bytes += event.data.byteLength;
-    if (event.data.byteLength > 48000 || bytes > 48000 * 20 * 60 || upstream.bufferedAmount > 240000) { close(1008, "Audio limit exceeded"); return; }
-    upstream.send(event.data);
+    const data = event.data;
+    sendQueue = sendQueue.then(async () => {
+      if (closed) return;
+      const audio = await normalizeAudioFrame(data);
+      bytes += audio.byteLength;
+      if (audio.byteLength > 48000 || bytes > 48000 * 20 * 60 || upstream.bufferedAmount > 240000) { close(1008, "Audio limit exceeded"); return; }
+      if (!closed) upstream.send(audio);
+    }).catch(() => close(1011, "Audio send failed"));
   });
   server.addEventListener("close", () => close()); server.addEventListener("error", () => close(1011, "Connection error"));
   upstream.addEventListener("close", event => close(event.code === 1000 ? 1000 : 1011, "Speech connection closed"));

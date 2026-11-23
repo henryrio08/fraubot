@@ -4,9 +4,19 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { buildPayload, consumeEvents, partialResult, validResult, validateInput } from "../lib/assist.mjs";
 import { handleApi } from "../lib/api.mjs";
+import { normalizeAudioFrame } from "../lib/audio.mjs";
 
 const request = (body, origin = "https://leute.example") => new Request("https://leute.example/api/assist", { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(body) });
 const input = { text: "Was hast du gemacht?", mode: "funny" };
+test("binary speech frames remain binary across Blob, buffer, and offset-view runtimes", async () => {
+  const bytes = Uint8Array.of(0, 128, 255, 127);
+  for (const input of [bytes.buffer, new Blob([bytes]), Uint8Array.of(9, ...bytes, 9).subarray(1, 5)]) {
+    const result = await normalizeAudioFrame(input);
+    assert.ok(result instanceof ArrayBuffer);
+    assert.deepEqual([...new Uint8Array(result)], [...bytes]);
+  }
+  await assert.rejects(normalizeAudioFrame("not PCM"), /binary audio/);
+});
 test("validates bounded transcripts, modes, and context", () => {
   assert.equal(validateInput({ text: " ", mode: "natural" }), null);
   assert.equal(validateInput({ ...input, mode: "abuse" }), null);

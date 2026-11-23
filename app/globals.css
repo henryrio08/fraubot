@@ -10,3 +10,5 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 .turn-translation,.english-reply,.how-step p{font-size:16px}.mode-card strong{font-size:14px}.mode-card>span{font-size:14px;line-height:1.5}.reply-actions button{font-size:14px}.session-status{font-size:14px}.settings-field label,.settings-field select,.toggle-row strong{font-size:14px}.connection-card p,.settings-field p{font-size:14px}.microphone-status>span{font-size:12px}
+
+.page-heading p{color:#74767e}.turn-translation{color:#71747d}.mode-card>span{color:#787b83}.sidebar-tip p{color:#777b82}.empty-conversation>p{color:#7b7e87}.english-reply{color:#b2beb5}
