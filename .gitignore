@@ -32,6 +32,7 @@ yarn-error.log*
 !.dev.vars.example
 voice-samples/
 *.wav
+!/public/leute.wav
 *.mp3
 *.m4a
 *.webm

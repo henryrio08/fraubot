@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "LEUTE! — Highly questionable German",
+  title: "fraubot — LEUTE!",
   description: "Live translation and deeply questionable German replies.",
   icons: {
     icon: "/favicon.svg",

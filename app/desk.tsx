@@ -9,11 +9,11 @@ type Turn = { id: string; text: string; time: string; source: "live" | "typed" |
 type Config = { configured: boolean; provider: string };
 type Tab = "desk" | "notes" | "audio";
 type Recognition = { lang: string; continuous: boolean; interimResults: boolean; onresult: ((event: any) => void) | null; onerror: ((event: any) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort: () => void };
-const modes: { id: Mode; title: string; subtitle: string; emoji: string }[] = [
-  { id: "natural", title: "Normal", subtitle: "Actual German", emoji: "😇" },
-  { id: "fluent", title: "Tryhard", subtitle: "Academic overkill", emoji: "🤓" },
-  { id: "funny", title: "Unhinged", subtitle: "Swearing + dark humor", emoji: "🦆" },
-  { id: "gibberish", title: "Gibberish", subtitle: "100% fake German", emoji: "🧌" },
+const modes: { id: Mode; title: string; emoji: string }[] = [
+  { id: "natural", title: "Normal", emoji: "😇" },
+  { id: "fluent", title: "tryhard", emoji: "🤓" },
+  { id: "funny", title: "frau destroyer", emoji: "😈" },
+  { id: "gibberish", title: "Gibberish", emoji: "🧌" },
 ];
 const now = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 const uid = () => crypto.randomUUID();
@@ -24,6 +24,7 @@ export default function Desk() {
   const [selected, setSelected] = useState<string | null>(null); const [partial, setPartial] = useState("");
   const [config, setConfig] = useState<Config | null>(null); const [settings, setSettings] = useState(false); const [help, setHelp] = useState(false);
   const [listening, setListening] = useState(false); const [connecting, setConnecting] = useState(false); const [demoRunning, setDemoRunning] = useState(false);
+  const [shouting, setShouting] = useState(false); const shoutRef = useRef<HTMLAudioElement | null>(null);
   const [typed, setTyped] = useState(false); const [input, setInput] = useState(""); const [notice, setNotice] = useState("");
   const [level, setLevel] = useState(0); const [testing, setTesting] = useState(false); const [noise, setNoise] = useState(true);
   const [engine, setEngine] = useState<"meta" | "browser">("meta"); const [speakers, setSpeakers] = useState(false); const [autoReply, setAutoReply] = useState(true);
@@ -39,7 +40,7 @@ export default function Desk() {
   useEffect(() => { fetch("/api/config", { cache: "no-store" }).then(async r => { if (!r.ok) throw new Error(); const value = await r.json() as Config; if (typeof value.configured !== "boolean") throw new Error(); setConfig(value); }).catch(() => setNotice("Connection check failed. Try refreshing.")); }, []);
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, [turns.length, partial]);
   useEffect(() => { if (!listening) return; const start = Date.now(); const timer = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000); return () => clearInterval(timer); }, [listening]);
-  useEffect(() => () => { liveRef.current = false; sessionGeneration.current++; requestRef.current?.abort(); demoTimers.current.forEach(clearTimeout); recognitionRef.current?.abort(); streamRef.current?.getTracks().forEach(t => t.stop()); socketRef.current?.close(); void contextRef.current?.close(); cancelAnimationFrame(meterRef.current); if (referenceRef.current) URL.revokeObjectURL(referenceRef.current); }, []);
+  useEffect(() => () => { liveRef.current = false; sessionGeneration.current++; requestRef.current?.abort(); shoutRef.current?.pause(); demoTimers.current.forEach(clearTimeout); recognitionRef.current?.abort(); streamRef.current?.getTracks().forEach(t => t.stop()); socketRef.current?.close(); void contextRef.current?.close(); cancelAnimationFrame(meterRef.current); if (referenceRef.current) URL.revokeObjectURL(referenceRef.current); }, []);
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(""), 8500); return () => clearTimeout(timer); }, [notice]);
   useEffect(() => { if (!settings && !help) return; const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { setSettings(false); setHelp(false); } }; window.addEventListener("keydown", handler); return () => window.removeEventListener("keydown", handler); }, [settings, help]);
 
@@ -155,12 +156,20 @@ export default function Desk() {
   }
   async function copyReply() { if (!active?.answer?.german) return; try { await navigator.clipboard.writeText(active.answer.german); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { setNotice("Clipboard unavailable. Select the reply text to copy it."); } }
   function speakReply() { if (!active?.answer?.german || !("speechSynthesis" in window)) { setNotice("Speech playback is unavailable in this browser."); return; } if (listening) { setNotice("Stop listening before playback to keep the voice out of your transcript."); return; } speechSynthesis.cancel(); const speech = new SpeechSynthesisUtterance(active.answer.german); speech.lang = "de-DE"; speech.rate = .85; speechSynthesis.speak(speech); }
+  function shoutLeute() {
+    stopDemo();
+    if (liveRef.current || startingRef.current || testing) stopCapture();
+    window.speechSynthesis?.cancel();
+    const audio = shoutRef.current;
+    if (!audio) return;
+    audio.pause(); audio.currentTime = 0; audio.volume = 1;
+    void audio.play().catch(error => { if (error?.name === "AbortError") return; setShouting(false); setNotice("Couldn’t play LEUTE. Try again."); });
+  }
   async function testMicrophone() { if (testing) { stopCapture(false); return; } stopCapture(false); setTesting(true); try { await attachMicrophone(); } catch (e) { stopCapture(false); setNotice(e instanceof Error ? e.message : "Microphone unavailable."); } }
 
   return <div className="app-shell">
     <header className="site-header">
-      <button className="wordmark" onClick={() => setTab("desk")} aria-label="LEUTE home">LEUTE<span>!</span></button>
-      <span className="unserious-sticker" aria-hidden="true">SEHR UNSERIÖS</span>
+      <div className="brand-lockup"><button className="wordmark" onClick={() => setTab("desk")} aria-label="LEUTE home">LEUTE<span>!</span></button><span className="project-name">fraubot</span></div>
       <nav className="utility-nav" aria-label="Tools">
         <button aria-label="History" title="History" className={tab === "notes" ? "utility-button selected" : "utility-button"} onClick={() => setTab(tab === "notes" ? "desk" : "notes")}><BookOpen size={18} /><span>History</span>{turns.length > 0 && <b>{turns.length}</b>}</button>
         <button aria-label="Mic check" title="Mic check" className={tab === "audio" ? "utility-button selected" : "utility-button"} onClick={() => setTab(tab === "audio" ? "desk" : "audio")}><Headphones size={18} /><span>Mic check</span></button>
@@ -175,6 +184,7 @@ export default function Desk() {
             {connecting ? <LoaderCircle className="spin" size={27} /> : listening || demoRunning ? <Square size={24} fill="currentColor" /> : <Mic size={29} />}
             {connecting ? "CONNECTING…" : listening || demoRunning ? "STOP" : "LISTEN"}
           </button>
+          <button className={`shout-button ${shouting ? "is-shouting" : ""}`} onClick={shoutLeute} aria-label="LEUTE" aria-busy={shouting} title="Say LEUTE at full volume">LEUTE</button>
           <div className="quick-actions">
             <button className="plain-button" onClick={() => setTyped(!typed)} aria-expanded={typed} aria-label="Type German instead"><Keyboard size={18} />Type it</button>
             <button className="plain-button" onClick={runDemo} disabled={demoRunning}><Play size={17} />Demo</button>
@@ -194,7 +204,7 @@ export default function Desk() {
 
         <section className="mode-picker" aria-label="Reply mode">
           {modes.map(m => <button key={m.id} className={`mode-button mode-${m.id} ${mode === m.id ? "chosen" : ""}`} onClick={() => modeSelect(m.id)} aria-pressed={mode === m.id}>
-            <span className="mode-emoji" aria-hidden="true">{m.emoji}</span><span><strong>{m.title}</strong><small>{m.subtitle}</small></span><span className="mode-check">{mode === m.id && <Check size={14} strokeWidth={3} />}</span>
+            <span className="mode-emoji" aria-hidden="true">{m.emoji}</span><span><strong>{m.title}</strong></span><span className="mode-check">{mode === m.id && <Check size={14} strokeWidth={3} />}</span>
           </button>)}
         </section>
 
@@ -246,6 +256,7 @@ export default function Desk() {
       <footer className="site-footer"><span>Use the mic with everyone’s permission.</span><button className="connection-button" onClick={() => setSettings(true)}>{config === null ? "Connecting…" : config.configured ? <><Check size={14} />Connected</> : "Set up connection"}</button></footer>
     </main>
 
+    <audio ref={shoutRef} src="/leute.wav" preload="auto" onPlay={() => setShouting(true)} onEnded={() => setShouting(false)} onError={() => { setShouting(false); setNotice("The LEUTE clip couldn’t load. Try refreshing."); }} />
     {notice && <div className="toast" role="status"><HelpCircle size={19} /><span>{notice}</span><button className="icon-button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={17} /></button></div>}
     {(settings || help) && <div className="modal-backdrop" onClick={() => { setSettings(false); setHelp(false); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" onClick={e => e.stopPropagation()} onKeyDown={e => { if (e.key !== "Tab") return; const nodes = e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), summary'); const first = nodes[0]; const last = nodes[nodes.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); } }}>
       <button className="modal-close icon-button" aria-label="Close dialog" onClick={() => { setSettings(false); setHelp(false); }} autoFocus><X size={23} /></button>
@@ -258,7 +269,7 @@ export default function Desk() {
         <label className="toggle-row"><div><strong>Auto-translate and reply</strong><span>Off? Click a caption to process it.</span></div><input type="checkbox" checked={autoReply} onChange={e => setAutoReply(e.target.checked)} /></label>
         <details className="privacy-details"><summary>Where does the audio go?</summary><p>Live audio goes to Meta or Chrome’s speech service. Text goes to Meta. This app saves no recordings or transcript history on its server; provider retention policies still apply. Listening stops after 20 minutes.</p></details>
         <div className="modal-bottom"><button className="text-button" onClick={() => { setSettings(false); setHelp(true); }}>How to use this</button><button className="solid-button" onClick={() => setSettings(false)}>Done</button></div>
-      </> : <><ol className="how-list"><li>Hit <strong>Listen</strong> or type some German.</li><li>Pick <strong>Normal, Tryhard, Unhinged, or Gibberish.</strong></li><li>Read the translation and choose what to say.</li></ol><p className="help-note">Demo uses prewritten examples. Gibberish is intentionally wrong. Voice isolation isn’t connected.</p><button className="solid-button" onClick={() => { setHelp(false); runDemo(); }}>Try the demo</button></>}
+      </> : <><ol className="how-list"><li>Hit <strong>Listen</strong> or type some German.</li><li>Pick <strong>Normal, tryhard, frau destroyer, or Gibberish.</strong></li><li>Read the translation and choose what to say.</li></ol><p className="help-note">Demo uses prewritten examples. Gibberish is intentionally wrong. Voice isolation isn’t connected.</p><button className="solid-button" onClick={() => { setHelp(false); runDemo(); }}>Try the demo</button></>}
     </section></div>}
   </div>;
 }
