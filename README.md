@@ -22,7 +22,8 @@ The example session works immediately without any credentials. It is prewritten 
 - German and English language hints, cumulative live captions, automatic utterance boundaries.
 - Optional session-scoped speaker labels. These do not identify a person or isolate a voice.
 - Accurate English translation plus Normal, tryhard, frau destroyer, and Gibberish reply modes.
-- Streaming structured replies, English meaning, approximate pronunciation, copy, and opt-in browser speech playback.
+- Streaming replies with visible syllable-by-syllable pronunciation, bold stressed syllables, English meaning, and copy.
+- Slow German audio with stop controls, plus a compact sound key. Written pronunciation is approximate; examples and sound-key notes reference [Goethe-Institut pronunciation materials](https://www.goethe.de/resources/files/pdf354/gi_lauter_bitte-v2.pdf).
 - Typed input, scripted examples, in-tab session notes, bookmarks, and text export.
 - Local microphone level test and local audio-reference preview.
 - Responsive desktop/mobile layout and reduced-motion support.

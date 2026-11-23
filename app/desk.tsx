@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AudioLines, BookOpen, Check, Copy, Download, Headphones, HelpCircle, Keyboard, LoaderCircle, Mic, Play, RotateCcw, Settings2, Square, Trash2, Volume2, X, Bookmark } from "lucide-react";
 import { consumeEvents, partialResult, validResult } from "../lib/assist.mjs";
 import { demoAnswer, samples, type Mode, type Answer } from "../lib/demo";
+import PronunciationGuide from "../components/pronunciation-guide";
 
 type Turn = { id: string; text: string; time: string; source: "live" | "typed" | "demo"; sample?: number; answer?: Answer; mode?: Mode; busy?: boolean; error?: string; duration?: number; saved?: boolean; speaker?: string; ordinal?: number };
 type Config = { configured: boolean; provider: string };
@@ -28,7 +29,7 @@ export default function Desk() {
   const [typed, setTyped] = useState(false); const [input, setInput] = useState(""); const [notice, setNotice] = useState("");
   const [level, setLevel] = useState(0); const [testing, setTesting] = useState(false); const [noise, setNoise] = useState(true);
   const [engine, setEngine] = useState<"meta" | "browser">("meta"); const [speakers, setSpeakers] = useState(false); const [autoReply, setAutoReply] = useState(true);
-  const [reference, setReference] = useState<{ name: string; url: string } | null>(null); const [copied, setCopied] = useState(false); const [pronounce, setPronounce] = useState(false); const [elapsed, setElapsed] = useState(0);
+  const [reference, setReference] = useState<{ name: string; url: string } | null>(null); const [copied, setCopied] = useState(false); const [speaking, setSpeaking] = useState(false); const speechRef = useRef<SpeechSynthesisUtterance | null>(null); const [elapsed, setElapsed] = useState(0);
   const modeRef = useRef(mode); const autoRef = useRef(autoReply); const liveRef = useRef(false); const demoIndex = useRef(0); const sequenceRef = useRef(0);
   const streamRef = useRef<MediaStream | null>(null); const contextRef = useRef<AudioContext | null>(null); const socketRef = useRef<WebSocket | null>(null);
   const recognitionRef = useRef<Recognition | null>(null); const meterRef = useRef(0); const requestRef = useRef<AbortController | null>(null);
@@ -40,7 +41,7 @@ export default function Desk() {
   useEffect(() => { fetch("/api/config", { cache: "no-store" }).then(async r => { if (!r.ok) throw new Error(); const value = await r.json() as Config; if (typeof value.configured !== "boolean") throw new Error(); setConfig(value); }).catch(() => setNotice("Connection check failed. Try refreshing.")); }, []);
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, [turns.length, partial]);
   useEffect(() => { if (!listening) return; const start = Date.now(); const timer = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000); return () => clearInterval(timer); }, [listening]);
-  useEffect(() => () => { liveRef.current = false; sessionGeneration.current++; requestRef.current?.abort(); shoutRef.current?.pause(); demoTimers.current.forEach(clearTimeout); recognitionRef.current?.abort(); streamRef.current?.getTracks().forEach(t => t.stop()); socketRef.current?.close(); void contextRef.current?.close(); cancelAnimationFrame(meterRef.current); if (referenceRef.current) URL.revokeObjectURL(referenceRef.current); }, []);
+  useEffect(() => () => { liveRef.current = false; sessionGeneration.current++; requestRef.current?.abort(); if (speechRef.current) window.speechSynthesis?.cancel(); speechRef.current = null; shoutRef.current?.pause(); demoTimers.current.forEach(clearTimeout); recognitionRef.current?.abort(); streamRef.current?.getTracks().forEach(t => t.stop()); socketRef.current?.close(); void contextRef.current?.close(); cancelAnimationFrame(meterRef.current); if (referenceRef.current) URL.revokeObjectURL(referenceRef.current); }, []);
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(""), 8500); return () => clearTimeout(timer); }, [notice]);
   useEffect(() => { if (!settings && !help) return; const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { setSettings(false); setHelp(false); } }; window.addEventListener("keydown", handler); return () => window.removeEventListener("keydown", handler); }, [settings, help]);
 
@@ -69,6 +70,7 @@ export default function Desk() {
     return { context, source };
   }
   async function analyze(turn: Turn, chosen = modeRef.current) {
+    stopSpeech();
     requestRef.current?.abort();
     updateTurns(items => items.map(t => t.busy ? { ...t, busy: false } : t));
     if (turn.source === "demo") { patchTurn(turn.id, { answer: demoAnswer(turn.sample || 0, chosen), mode: chosen, busy: false, error: undefined }); return; }
@@ -99,6 +101,7 @@ export default function Desk() {
     if (isLatest) { setSelected(turn.id); if (autoRef.current || source !== "live") void analyze(turn); }
   }
   async function startSession() {
+    stopSpeech();
     if (listening || connecting || demoRunning) { stopDemo(); stopCapture(); return; }
     if (startingRef.current) return;
     if (engine === "meta" && !config?.configured) { setSettings(true); return; }
@@ -141,31 +144,48 @@ export default function Desk() {
     } catch (error) { stopCapture(false); setNotice(error instanceof Error ? error.message : "Could not start the microphone."); }
   }
   function runDemo() {
+    stopSpeech();
     stopCapture(false); stopDemo(); setTab("desk"); setDemoRunning(true); const sample = demoIndex.current++ % samples.length;
     const words = samples[sample].text.split(" ");
     words.forEach((_, i) => demoTimers.current.push(setTimeout(() => setPartial(words.slice(0, i + 1).join(" ")), 110 * (i + 1))));
     demoTimers.current.push(setTimeout(() => { addFinal(samples[sample].text, "demo", undefined, sample); setDemoRunning(false); }, 110 * words.length + 400));
   }
-  function clearSession() { stopDemo(); stopCapture(false); requestRef.current?.abort(); updateTurns(() => []); setSelected(null); setPartial(""); setElapsed(0); setNotice("Cleared."); }
+  function clearSession() { stopSpeech(); stopDemo(); stopCapture(false); requestRef.current?.abort(); updateTurns(() => []); setSelected(null); setPartial(""); setElapsed(0); setNotice("Cleared."); }
   function submitTyped(e: FormEvent) { e.preventDefault(); if (!input.trim()) return; addFinal(input, "typed"); setInput(""); setTyped(false); }
   const active = turns.find(t => t.id === selected) || turns.at(-1); const chosenMode = modes.find(m => m.id === mode)!;
-  const modeSelect = (next: Mode) => { setMode(next); modeRef.current = next; setPronounce(false); if (active) void analyze(active, next); };
+  const modeSelect = (next: Mode) => { setMode(next); modeRef.current = next; if (active) void analyze(active, next); };
   function exportNotes() {
-    const text = turns.map(t => `[${t.time}] ${t.source === "demo" ? "EXAMPLE" : "GERMAN"}: ${t.text}\n${t.answer?.translation ? "ENGLISH: " + t.answer.translation : ""}\n${t.answer?.german ? "SUGGESTED REPLY (" + t.mode + "): " + t.answer.german + "\nMEANING: " + t.answer.english : ""}`).join("\n\n");
+    const text = turns.map(t => `[${t.time}] ${t.source === "demo" ? "EXAMPLE" : "GERMAN"}: ${t.text}\n${t.answer?.translation ? "ENGLISH: " + t.answer.translation : ""}\n${t.answer?.german ? "SUGGESTED REPLY (" + t.mode + "): " + t.answer.german + "\nPRONUNCIATION: " + t.answer.pronunciation + "\nMEANING: " + t.answer.english : ""}`).join("\n\n");
     const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" })); const link = document.createElement("a"); link.href = url; link.download = "leute-session.txt"; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   async function copyReply() { if (!active?.answer?.german) return; try { await navigator.clipboard.writeText(active.answer.german); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { setNotice("Clipboard unavailable. Select the reply text to copy it."); } }
-  function speakReply() { if (!active?.answer?.german || !("speechSynthesis" in window)) { setNotice("Speech playback is unavailable in this browser."); return; } if (listening) { setNotice("Stop listening before playback to keep the voice out of your transcript."); return; } speechSynthesis.cancel(); const speech = new SpeechSynthesisUtterance(active.answer.german); speech.lang = "de-DE"; speech.rate = .85; speechSynthesis.speak(speech); }
+  function stopSpeech() {
+    speechRef.current = null; window.speechSynthesis?.cancel(); setSpeaking(false);
+  }
+  function speakReply(rate = .85) {
+    if (!active?.answer?.german || !("speechSynthesis" in window)) { setNotice("Speech playback is unavailable in this browser."); return; }
+    if (listening || connecting || testing) { setNotice("Stop the microphone before playback so it doesn’t hear itself."); return; }
+    stopSpeech();
+    const speech = new SpeechSynthesisUtterance(active.answer.german);
+    speech.lang = "de-DE"; speech.rate = rate;
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find(v => v.lang.toLowerCase() === "de-de") || voices.find(v => v.lang.toLowerCase().startsWith("de"));
+    if (voice) speech.voice = voice;
+    speechRef.current = speech; setSpeaking(true);
+    speech.onend = () => { if (speechRef.current === speech) { speechRef.current = null; setSpeaking(false); } };
+    speech.onerror = event => { if (speechRef.current !== speech) return; speechRef.current = null; setSpeaking(false); if (!["canceled", "interrupted"].includes(event.error)) setNotice("German audio is unavailable here. You can still use the written guide."); };
+    window.speechSynthesis.speak(speech);
+  }
   function shoutLeute() {
     stopDemo();
     if (liveRef.current || startingRef.current || testing) stopCapture();
-    window.speechSynthesis?.cancel();
+    stopSpeech();
     const audio = shoutRef.current;
     if (!audio) return;
     audio.pause(); audio.currentTime = 0; audio.volume = 1;
     void audio.play().catch(error => { if (error?.name === "AbortError") return; setShouting(false); setNotice("Couldn’t play LEUTE. Try again."); });
   }
-  async function testMicrophone() { if (testing) { stopCapture(false); return; } stopCapture(false); setTesting(true); try { await attachMicrophone(); } catch (e) { stopCapture(false); setNotice(e instanceof Error ? e.message : "Microphone unavailable."); } }
+  async function testMicrophone() { stopSpeech(); if (testing) { stopCapture(false); return; } stopCapture(false); setTesting(true); try { await attachMicrophone(); } catch (e) { stopCapture(false); setNotice(e instanceof Error ? e.message : "Microphone unavailable."); } }
 
   return <div className="app-shell">
     <header className="site-header">
@@ -226,14 +246,14 @@ export default function Desk() {
             <div className="panel-heading"><h2>SAY THIS</h2><span className="reply-mode-tag">{chosenMode.emoji} {chosenMode.title}</span></div>
             {active?.source === "demo" && <span className="example-label">PREWRITTEN DEMO</span>}
             {active?.error ? <div className="reply-error"><HelpCircle size={30} /><h3>Technical difficulties.</h3><p>{active.error}</p><button className="solid-button" onClick={() => config?.configured ? void analyze(active) : setSettings(true)}>{config?.configured ? "Try again" : "Open settings"}</button></div> : active?.answer?.german ? <div className="answer-content">
-              <p className="german-reply" lang="de">{active.answer.german}</p><p className="english-reply">{active.answer.english || "Translating the reply…"}</p>
+              <p className="german-reply" lang="de">{active.answer.german}</p>
+              <PronunciationGuide text={active.answer.pronunciation} loading={!!active.busy} onSlow={() => speakReply(.62)} onStop={stopSpeech} speaking={speaking} />
+              <p className="english-reply">{active.answer.english || "Translating the reply…"}</p>
               {mode === "gibberish" && <span className="nonsense-label">Made-up German. On purpose.</span>}
-              {pronounce && <div className="pronunciation"><span>ROUGH PRONUNCIATION</span><p>{active.answer.pronunciation}</p></div>}
             </div> : <div className="reply-empty"><span className="reply-doodle" aria-hidden="true">{active?.busy ? "…" : "¯\\_(ツ)_/¯"}</span><h3>{active?.busy ? "Cooking up a reply…" : "No comeback yet."}</h3></div>}
             <div className="reply-actions">
               <button onClick={copyReply} disabled={!active?.answer?.german}>{copied ? <Check size={16} /> : <Copy size={16} />}{copied ? "Copied" : "Copy"}</button>
-              <button onClick={speakReply} disabled={!active?.answer?.german} aria-label="Hear the German reply"><Volume2 size={18} /><span>Hear it</span></button>
-              <button onClick={() => setPronounce(!pronounce)} disabled={!active?.answer?.pronunciation} aria-pressed={pronounce} aria-label="Show pronunciation"><span className="phonetic-icon">Aa</span><span>Pronounce</span></button>
+              <button onClick={() => speaking ? stopSpeech() : speakReply()} disabled={!active?.answer?.german} aria-label={speaking ? "Stop reply audio" : "Hear the German reply"}>{speaking ? <Square size={16} /> : <Volume2 size={18} />}<span>{speaking ? "Stop" : "Hear it"}</span></button>
               <button className="regenerate" aria-label="Regenerate reply" disabled={!active || active.busy} onClick={() => active && void analyze(active)}><RotateCcw size={17} /><span>Again</span></button>
             </div>
           </section>
@@ -242,7 +262,7 @@ export default function Desk() {
 
       {tab === "notes" && <section className="paper-panel notes-panel">
         <div className="panel-heading"><h1>THE EVIDENCE <span className="count">{turns.length}</span></h1><div className="heading-actions"><button className="plain-button" onClick={exportNotes} disabled={!turns.length}><Download size={16} />Save text</button><button className="icon-button" aria-label="Back to listening" onClick={() => setTab("desk")}><X size={20} /></button></div></div>
-        {!turns.length ? <div className="simple-empty"><span aria-hidden="true">📋</span><h2>No evidence yet.</h2><button className="solid-button" onClick={() => setTab("desk")}>Back to listening</button></div> : <div className="notes-list">{turns.map(t => <article key={t.id}><div className="turn-meta">{t.source === "demo" ? "DEMO" : t.time}<button className="icon-button" aria-label={t.saved ? "Remove bookmark" : "Bookmark utterance"} onClick={() => patchTurn(t.id, { saved: !t.saved })}><Bookmark size={17} fill={t.saved ? "currentColor" : "none"} /></button></div><h3 lang="de">{t.text}</h3><p>{t.answer?.translation || "Not translated yet."}</p>{t.answer?.german && <div className="note-answer"><span>{modes.find(m => m.id === t.mode)?.title || "REPLY"}</span><p lang="de">{t.answer.german}</p><small>{t.answer.english}</small></div>}</article>)}</div>}
+        {!turns.length ? <div className="simple-empty"><span aria-hidden="true">📋</span><h2>No evidence yet.</h2><button className="solid-button" onClick={() => setTab("desk")}>Back to listening</button></div> : <div className="notes-list">{turns.map(t => <article key={t.id}><div className="turn-meta">{t.source === "demo" ? "DEMO" : t.time}<button className="icon-button" aria-label={t.saved ? "Remove bookmark" : "Bookmark utterance"} onClick={() => patchTurn(t.id, { saved: !t.saved })}><Bookmark size={17} fill={t.saved ? "currentColor" : "none"} /></button></div><h3 lang="de">{t.text}</h3><p>{t.answer?.translation || "Not translated yet."}</p>{t.answer?.german && <div className="note-answer"><span>{modes.find(m => m.id === t.mode)?.title || "REPLY"}</span><p lang="de">{t.answer.german}</p><PronunciationGuide text={t.answer.pronunciation} /><small>{t.answer.english}</small></div>}</article>)}</div>}
         <div className="notes-footer"><span>Gone when you reload. Save it if you want it.</span><button className="text-button" onClick={clearSession} disabled={!turns.length}><Trash2 size={14} />Clear</button></div>
       </section>}
 
