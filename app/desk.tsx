@@ -5,6 +5,7 @@ import { AudioLines, BookOpen, Check, Copy, Download, Headphones, HelpCircle, Ke
 import { consumeEvents, partialResult, validResult } from "../lib/assist.mjs";
 import { demoAnswer, samples, type Mode, type Answer } from "../lib/demo";
 import PronunciationGuide from "../components/pronunciation-guide";
+import RoomChat from "../components/room-chat";
 
 type Turn = { id: string; text: string; time: string; source: "live" | "typed" | "demo"; sample?: number; answer?: Answer; mode?: Mode; busy?: boolean; error?: string; duration?: number; saved?: boolean; speaker?: string; ordinal?: number };
 type Config = { configured: boolean; provider: string };
@@ -191,6 +192,7 @@ export default function Desk() {
     <header className="site-header">
       <div className="brand-lockup"><button className="wordmark" onClick={() => setTab("desk")} aria-label="LEUTE home">LEUTE<span>!</span></button><span className="project-name">fraubot</span></div>
       <nav className="utility-nav" aria-label="Tools">
+        <RoomChat />
         <button aria-label="History" title="History" className={tab === "notes" ? "utility-button selected" : "utility-button"} onClick={() => setTab(tab === "notes" ? "desk" : "notes")}><BookOpen size={18} /><span>History</span>{turns.length > 0 && <b>{turns.length}</b>}</button>
         <button aria-label="Mic check" title="Mic check" className={tab === "audio" ? "utility-button selected" : "utility-button"} onClick={() => setTab(tab === "audio" ? "desk" : "audio")}><Headphones size={18} /><span>Mic check</span></button>
         <button className="utility-button settings-button" aria-label="Settings" onClick={() => setSettings(true)}><Settings2 size={20} /></button>

@@ -21,26 +21,16 @@ function database(t) {
     };
     return bound;
   };
-  return { sql, prepare, async batch(statements) {
-    sql.exec("BEGIN");
-    try {
-      const results = [];
-      for (const statement of statements) results.push(await statement.all().catch(() => statement.run()));
-      sql.exec("COMMIT");
-      return results;
-    } catch (error) { sql.exec("ROLLBACK"); throw error; }
-  } };
+  return { sql, prepare };
 }
 
 // D1 .batch() returns metadata for both reads and writes.
 function d1(t) {
-  const db = database(t);
-  const original = db.prepare;
-  db.prepare = query => {
-    const statement = original(query);
+  const source = database(t);
+  const db = { sql: source.sql, prepare: query => {
+    const statement = source.prepare(query);
     return { ...statement, isWrite: /^(INSERT|UPDATE|DELETE)/.test(query), bind(...args) { statement.bind(...args); return this; } };
-  };
-  db.batch = async statements => {
+  }, async batch(statements) {
     db.sql.exec("BEGIN");
     try {
       const results = [];
@@ -48,7 +38,7 @@ function d1(t) {
       db.sql.exec("COMMIT");
       return results;
     } catch (error) { db.sql.exec("ROLLBACK"); throw error; }
-  };
+  } };
   return db;
 }
 const request = (path, user, body, origin = "https://leute.test") => new Request("https://leute.test/api/chat" + path, {
@@ -132,4 +122,34 @@ test("durable per-member send limit is enforced by the database", async t => {
   for (let i = 0; i < 30; i++) assert.equal((await send(db, room.room.code, "throttle-a", `Message ${i}`)).status, 201);
   assert.equal((await send(db, room.room.code, "throttle-a", "one too many")).status, 429);
   assert.equal(db.sql.prepare("SELECT COUNT(*) AS n FROM chat_messages").get().n, 30);
+});
+
+test("room creation and membership capacities are bounded", async t => {
+  const db = d1(t);
+  const room = await create(db, "capacity-a");
+  for (let i = 1; i < 20; i++) {
+    const r = await handleChat(request("/join", `capacity-${i}`, { nickname: `Friend ${i}`, code: room.room.code }), { DB: db });
+    assert.equal(r.status, 200);
+  }
+  const full = await handleChat(request("/join", "capacity-extra", { nickname: "Too late", code: room.room.code }), { DB: db });
+  assert.equal(full.status, 409);
+  for (let i = 1; i < 5; i++) await create(db, "capacity-a");
+  assert.equal((await handleChat(request("/rooms", "capacity-a", { nickname: "Sixth room" }), { DB: db })).status, 429);
+});
+
+test("history and polling cursors return bounded, ordered message pages", async t => {
+  const db = d1(t);
+  const room = await create(db, "pages-a");
+  const roomId = db.sql.prepare("SELECT id FROM chat_rooms WHERE code = ?").get(room.room.code).id;
+  const insert = db.sql.prepare("INSERT INTO chat_messages (room_id, member_id, client_id, nickname, text, created_at) VALUES (?, ?, ?, ?, ?, ?)");
+  for (let i = 0; i < 105; i++) insert.run(roomId, room.me.id, crypto.randomUUID(), "Kartoffel", `Message ${i}`, Date.now());
+  const history = await (await handleChat(request(`/rooms/${room.room.code}`, "pages-a"), { DB: db })).json();
+  assert.equal(history.messages.length, 100);
+  assert.equal(history.messages[0].text, "Message 5");
+  assert.equal(history.messages.at(-1).text, "Message 104");
+  const page = await (await handleChat(request(`/rooms/${room.room.code}?after=1`, "pages-a"), { DB: db })).json();
+  assert.equal(page.messages.length, 100);
+  const next = await (await handleChat(request(`/rooms/${room.room.code}?after=${page.cursor}`, "pages-a"), { DB: db })).json();
+  assert.equal(next.messages.length, 4);
+  assert.equal(next.messages.at(-1).text, "Message 104");
 });
