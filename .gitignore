@@ -29,6 +29,14 @@ yarn-error.log*
 # Local environment and keys
 .env*
 .dev.vars*
+!.dev.vars.example
+voice-samples/
+*.wav
+*.mp3
+*.m4a
+*.webm
+*.ogg
+*.flac
 *.pem
 
 # Checkout-local tool state

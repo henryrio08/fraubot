@@ -1,0 +1,5 @@
+# Copy this file to .dev.vars and add a key from dev.meta.ai.
+# .dev.vars is ignored by Git. Never commit or paste your real key into chat.
+MODEL_API_KEY=
+META_TEXT_MODEL=muse-ember-1.0
+META_SPEECH_MODEL=muse-voice-transcribe-1.0

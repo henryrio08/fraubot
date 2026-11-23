@@ -1,9 +1,14 @@
 import handler from "vinext/server/fetch-handler";
 import { runWithConnectorBinding } from "../lib/connector-context";
 import type { ConnectorBinding } from "../lib/connector-contract.mjs";
+import { handleApi } from "../lib/api.mjs";
+import { handleSpeech } from "./speech";
 
 const worker = {
   fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
+    const pathname = new URL(request.url).pathname;
+    if (pathname === "/api/speech") return handleSpeech(request, env as { MODEL_API_KEY?: string });
+    if (pathname.startsWith("/api/")) return handleApi(request, env);
     let binding = ctx.props?.CONNECTORS;
     // Local preview emulates the same request-scoped capability. This branch and
     // the auxiliary service binding are absent from production builds.

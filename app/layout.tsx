@@ -2,11 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Starter Project",
-  description: "A clean starting point for building your site.",
-  other: {
-    "codex-preview": "development",
-  },
+  title: "LEUTE! — German, in the moment.",
+  description: "Catch the German. Get the meaning. Find your next words.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
