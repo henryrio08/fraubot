@@ -2,11 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
+import { database } from "./helpers/database.mjs";
 import { buildPayload, consumeEvents, partialResult, validResult, validateInput } from "../lib/assist.mjs";
 import { handleApi } from "../lib/api.mjs";
 import { normalizeAudioFrame } from "../lib/audio.mjs";
 
-const request = (body, origin = "https://leute.example") => new Request("https://leute.example/api/assist", { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(body) });
+const request = (body, origin = "https://leute.example") => new Request("https://leute.example/api/assist", { method: "POST", headers: { origin, "content-type": "application/json", "oai-authenticated-user-id": "assist-test" }, body: JSON.stringify(body) });
 const input = { text: "Was hast du gemacht?", mode: "funny" };
 test("binary speech frames remain binary across Blob, buffer, and offset-view runtimes", async () => {
   const bytes = Uint8Array.of(0, 128, 255, 127);
@@ -51,17 +52,17 @@ test("missing credentials return a clear configuration error without fake output
   const config = await handleApi(new Request("https://leute.example/api/config"), { MODEL_API_KEY: "secret" });
   const text = await config.text(); assert.doesNotMatch(text, /secret/); assert.match(text, /"configured":true/);
 });
-test("credentials travel only to the fixed Meta endpoint and provider errors are sanitized", async () => {
-  const r = await handleApi(request(input), { MODEL_API_KEY: "private-test-value" }, async (url, options) => {
+test("credentials travel only to the fixed Meta endpoint and provider errors are sanitized", async t => {
+  const r = await handleApi(request(input), { MODEL_API_KEY: "private-test-value", DB: database(t) }, async (url, options) => {
     assert.equal(url, "https://api.meta.ai/v1/responses"); assert.equal(options.headers.Authorization, "Bearer private-test-value");
     assert.doesNotMatch(options.body, /private-test-value/);
     return new Response('private diagnostic private-test-value', { status: 401 });
   });
   assert.equal(r.status, 502); assert.doesNotMatch(await r.text(), /private-test-value/);
 });
-test("successful generation stays streamed and uncached", async () => {
+test("successful generation stays streamed and uncached", async t => {
   const stream = 'data: {"type":"response.completed"}\n\n';
-  const r = await handleApi(request(input), { MODEL_API_KEY: "test" }, async () => new Response(stream));
+  const r = await handleApi(request(input), { MODEL_API_KEY: "test", DB: database(t) }, async () => new Response(stream));
   assert.equal(r.headers.get("content-type"), "text/event-stream"); assert.equal(r.headers.get("cache-control"), "no-store"); assert.equal(await r.text(), stream);
 });
 test("audio worklet emits mono little-endian PCM16 at 24 kHz", () => {
@@ -75,4 +76,11 @@ test("audio worklet emits mono little-endian PCM16 at 24 kHz", () => {
     assert.ok(count > 21000 && count < 25000, `24 kHz output at source rate ${rate}: ${count}`);
     assert.equal(new DataView(sent[0]).getInt16(0, true), 16384);
   }
+});
+
+test("public visitors cannot reach paid generation anonymously", async () => {
+  let called = false;
+  const anonymous = new Request("https://leute.example/api/assist", { method: "POST", headers: { origin: "https://leute.example", "Content-Type": "application/json" }, body: JSON.stringify(input) });
+  const r = await handleApi(anonymous, { MODEL_API_KEY: "test" }, async () => { called = true; });
+  assert.equal(r.status, 401); assert.equal(called, false);
 });

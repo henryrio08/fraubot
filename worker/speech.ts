@@ -1,11 +1,14 @@
 import { sameOrigin, takeRateLimit } from "../lib/api.mjs";
 import { normalizeAudioFrame } from "../lib/audio.mjs";
-type SpeechEnv = { MODEL_API_KEY?: string; META_SPEECH_MODEL?: string };
+import { checkPaidAccess, SPEECH_SESSION_MINUTES } from "../lib/usage.mjs";
+type SpeechEnv = { MODEL_API_KEY?: string; META_SPEECH_MODEL?: string; DB?: D1Database };
 export async function handleSpeech(request: Request, env: SpeechEnv): Promise<Response> {
   if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return Response.json({ error: "WebSocket required." }, { status: 426 });
   if (!sameOrigin(request)) return Response.json({ error: "Unexpected origin." }, { status: 403 });
   if (!env.MODEL_API_KEY) return Response.json({ error: "Connect your Meta API key first." }, { status: 503 });
   if (!takeRateLimit(request, "speech", 8)) return Response.json({ error: "Wait a minute before starting another session." }, { status: 429 });
+  const denied = await checkPaidAccess(request, env, "speech");
+  if (denied) return denied;
   let upstream: WebSocket;
   try {
     const response = await fetch("https://api.meta.ai/v1/asr/realtime", { headers: { Upgrade: "websocket" }, signal: AbortSignal.timeout(15000) });
@@ -21,9 +24,9 @@ export async function handleSpeech(request: Request, env: SpeechEnv): Promise<Re
     try { server.close(code, reason); } catch {} try { upstream.close(code, reason); } catch {}
   };
   const expiry = setTimeout(() => {
-    try { server.send(JSON.stringify({ type: "error", message: "The 20-minute session limit was reached. Start a new session to continue." })); } catch {}
+    try { server.send(JSON.stringify({ type: "error", message: `The ${SPEECH_SESSION_MINUTES}-minute session limit was reached. Start a new session to continue.` })); } catch {}
     close(1000, "Session limit");
-  }, 20 * 60 * 1000);
+  }, SPEECH_SESSION_MINUTES * 60 * 1000);
   const deadline = setTimeout(() => close(1011, "Speech handshake timed out"), 12000);
   upstream.addEventListener("message", event => {
     if (typeof event.data !== "string") return;
@@ -47,7 +50,7 @@ export async function handleSpeech(request: Request, env: SpeechEnv): Promise<Re
       if (closed) return;
       const audio = await normalizeAudioFrame(data);
       bytes += audio.byteLength;
-      if (audio.byteLength > 48000 || bytes > 48000 * 20 * 60 || upstream.bufferedAmount > 240000) { close(1008, "Audio limit exceeded"); return; }
+      if (audio.byteLength > 48000 || bytes > 48000 * SPEECH_SESSION_MINUTES * 60 || upstream.bufferedAmount > 240000) { close(1008, "Audio limit exceeded"); return; }
       if (!closed) upstream.send(audio);
     }).catch(() => close(1011, "Audio send failed"));
   });
