@@ -1,6 +1,6 @@
 # fraubot / LEUTE!
 
-An unserious German translator with one big listen button, live captions, and four reply modes. Built with React, TypeScript, Vinext, and Cloudflare Workers. Uses Meta Model API credits from [dev.meta.ai](https://dev.meta.ai/).
+A German translator with one big listen button, live captions, and four reply modes. Built with React, TypeScript, Vinext, and Cloudflare Workers. Uses Meta Model API credits from [dev.meta.ai](https://dev.meta.ai/).
 
 ## Run locally
 
@@ -28,19 +28,22 @@ The example session works immediately without any credentials. It is prewritten 
 - Local microphone level test and local audio-reference preview.
 - Responsive desktop/mobile layout and reduced-motion support.
 - LEUTE sound button using a bundled, level-normalized German voice clip at full playback volume. Repeated clicks restart it; microphone capture stops before playback.
-- Room chat with nicknames, copyable room codes, automatic message updates, unread badges, and refresh recovery.
+- One shared public class chat with nicknames, automatic updates, unread badges, and refresh recovery.
 
 ### Messaging
 
-Click **Chat**, pick a nickname, then **Make a room** or enter a friend's code. A room supports up to 20 signed-in users and expires 24 hours after creation. Chat polls every two seconds while open, every five seconds while closed, and reconnects after interrupted requests. The latest 100 messages are shown. Enter sends; Shift+Enter starts a new line.
+Click **Chat** to see the shared class channel. No room codes or room selection are needed. Anyone who can open the site can read the latest 100 messages from the last 24 hours. Sign in with ChatGPT and choose a nickname to post. Enter sends; Shift+Enter starts a new line. Chat polls every two seconds while open and every five seconds while closed, with a slower interval when the page is hidden.
 
-Chat uses the site's existing ChatGPT sign-in. Friends must have permission to open the Site before joining a room; a room code does not change Site sharing. Membership is checked on every read and write. Leaving revokes access until the user joins again. Messages and nicknames are stored in D1, independently of Meta, with a 1,000-character message limit, a durable 30-message-per-minute member limit, and a 1,000-message room limit. Retries use a stable message ID to avoid duplicates. Expired rooms are inaccessible immediately and are deleted with their messages during bounded cleanup when someone creates or joins a room.
+Chat messages and nicknames are stored in D1, independently of Meta. Posting is limited to 1,000 characters per message, 30 messages per person per minute, and 120 messages across the channel per minute. Stable message IDs prevent duplicate sends after retries. Messages older than 24 hours are excluded immediately and removed during bounded cleanup on new posts.
+
+The public channel has separate tables from the original private-room feature. Existing private-room messages are never included in public chat. The legacy room endpoints remain protected for compatibility.
 
 The database schema and generated migrations are in `db/schema.ts` and `drizzle/`. Sites provisions the `DB` binding and applies migrations on publication. For a first local chat preview, build once and apply the migration to the local database before running `npm run dev`:
 
 ```sh
 npm run build
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_outgoing_argent.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_fair_blacklash.sql
 ```
 
 Apply each migration only once. Local sign-in uses the starter's loopback-only mock; production identity is supplied by Sites.
@@ -68,13 +71,13 @@ The original speech is translated accurately in every mode. tryhard has a larger
 
 The text endpoint uses `https://api.meta.ai/v1/responses`, structured JSON output, minimal reasoning, and `store: false`. Speech connects to `wss://api.meta.ai/v1/asr/realtime` in ENDPOINTING mode or optional DIARIZATION mode. The server injects the API credential in the speech handshake; the browser never receives it.
 
-For hosted use, add these values as **Sites runtime secrets**, then redeploy. Local `.dev.vars` does not automatically configure production. The tracked `.openai/hosting.json` retains the Site identity. New Sites are owner-private; changing sharing is a separate access decision.
+For hosted use, add these values as **Sites runtime secrets**, then redeploy. Local `.dev.vars` does not automatically configure production. The tracked `.openai/hosting.json` retains the Site identity. Public access is managed through Sites sharing. Page access is independent from sign-in for posting or paid AI use.
 
 ## Audio and privacy
 
 Use classroom listening and voice references with the speakers' knowledge and permission. The app retains no recordings or transcript database. Notes, reference URLs, and replies live in this tab's memory and disappear on reload; exported notes are downloaded only when requested. Chat messages are stored separately in D1 and are never automatically filled with microphone transcripts. Microphone tests and reference preview stay local. Live speech audio goes to Meta (or the browser speech service if selected), and transcripts go to Meta for translation and replies. Provider retention policies still apply; `store: false` does not imply zero provider retention.
 
-The browser requests microphone permission, runs its visible microphone indicator, and releases tracks on stop, failure, and unmount. Streams have a 20-minute server limit. Background-noise processing cannot guarantee clear speech at ten feet or remove overlapping speakers.
+The browser requests microphone permission, runs its visible microphone indicator, and releases tracks on stop, failure, and unmount. Meta streams have a 10-minute server limit. Background-noise processing cannot guarantee clear speech at ten feet or remove overlapping speakers.
 
 ## Checks
 
@@ -86,4 +89,4 @@ npm run build
 
 Tests cover input limits, untrusted transcript handling, streamed SSE parsing across chunk boundaries, fixed provider destinations, secret redaction, cross-origin rejection, binary WebSocket frame normalization, and PCM conversion at multiple input sample rates. Chat tests execute the actual generated migration and API queries against SQLite, including two-user delivery, room isolation, leave/rejoin, expiry cleanup, retry deduplication, pagination, capacity, and durable send limits. Live provider quality and latency require a funded Meta key and representative microphone audio.
 
-Hosted access is enforced by Sites. Additional per-isolate rate limiting is best-effort protection, not a durable account spending cap. Configure spending limits in the Meta dashboard before broader sharing. No credentials or voice recordings are tracked in Git.
+The website can be opened publicly. Live AI generation and Meta listening require a Sites-authenticated ChatGPT identity. D1-backed limits allow 60 reply attempts and 6 listening starts per person each day, with shared site limits of 500 reply attempts and 24 listening starts. Each Meta session is capped at 10 minutes, and a start reserves the entire session allowance even if it fails or ends early. Daily counters use America/Chicago dates. If quota storage is unavailable, paid requests fail closed. These are usage limits, not a dollar-denominated provider spending cap. The limits are defined in `lib/usage.mjs`. No credentials or voice recordings are tracked in Git.

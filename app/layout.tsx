@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "fraubot — LEUTE!",
-  description: "Live translation and deeply questionable German replies.",
+  description: "German translation, reply modes, and class chat.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
