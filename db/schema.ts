@@ -58,3 +58,19 @@ export const aiUsage = sqliteTable("ai_usage", {
   kind: text("kind").notNull(),
   createdAt: integer("created_at").notNull(),
 }, table => [index("ai_usage_day_kind_user").on(table.day, table.kind, table.userId)]);
+
+export const directMessages = sqliteTable("direct_messages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  senderId: text("sender_id").notNull().references(() => classProfiles.id, { onDelete: "cascade" }),
+  recipientId: text("recipient_id").notNull().references(() => classProfiles.id, { onDelete: "cascade" }),
+  clientId: text("client_id").notNull(),
+  text: text("text").notNull(),
+  createdAt: integer("created_at").notNull(),
+  readAt: integer("read_at"),
+}, table => [
+  index("direct_messages_sender_time").on(table.senderId, table.createdAt),
+  index("direct_messages_recipient_time").on(table.recipientId, table.createdAt),
+  index("direct_messages_pair").on(table.senderId, table.recipientId, table.id),
+  index("direct_messages_time").on(table.createdAt),
+  uniqueIndex("direct_messages_retry").on(table.senderId, table.recipientId, table.clientId),
+]);
