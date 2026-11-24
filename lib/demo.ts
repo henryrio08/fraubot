@@ -17,9 +17,9 @@ export const samples = [
         "am VOKH-un-en-duh OON-ter-tsohk ikh MY-nuh FRY-tsyte-guh-SHTAL-toong EYE-ner may-tah-kog-nee-TEE-vun ef-fee-TSYENTS-prue-fung, oom das SHPAN-oongs-fair-HELT-nis TSVI-shun ray-gay-nay-rah-TSYOHNS-buh-DUERF-nis, zoh-TSYAH-ler in-ter-ak-TSYOHNS-dikh-tuh oont LANG-fris-ti-ger ZELPST-virk-zahm-kytes-er-VAR-toong zis-tay-MAH-tish tsoo ah-nah-lee-ZEE-run. OON-ter buh-RUEK-zikh-ti-goong er-KENT-nis-tay-oh-RAY-ti-sher OON-zi-kher-hy-ten ent-VIK-ul-tuh ikh AN-shlee-sunt EYE-nuh ray-SOOR-sun-oh-ree-en-TEER-tuh pree-oh-ree-ZEE-roongs-shtrah-tay-GEE, DAY-run OOM-zet-soong EYE-nuh NAHKH-hal-ti-guh fair-BES-er-oong MY-ner psue-khoh-FUE-zi-shun buh-LAS-toongs-ray-goo-lah-TSYOHN er-MUEG-li-khun zol",
       ],
       funny: [
-        "Ich habe meine Hausaufgaben beerdigt. Scheiße, selbst auf der Beerdigung wollten sie noch abgegeben werden.",
-        "I buried my homework. Shit, even at the funeral it still wanted to be handed in.",
-        "ikh HAH-buh MY-nuh HOWS-owf-gah-bun buh-AIR-dikht. SHY-suh, zelpst owf dair buh-AIR-di-goong VOL-tun zee nokh AP-guh-gay-bun VAIR-dun",
+        "Ich hab sechs Stunden Bildschirmzeit in vier Stunden geschafft.",
+        "I managed six hours of screen time in four hours.",
+        "ikh HAHB zeks SHTOON-dun BILT-shirm-tsyte in feer SHTOON-dun guh-SHAFT",
       ],
       gibberish: [
         "Schnörbelgratz flümperte klabusterwärts! Zwickelflauch, drömmelschrapp und bröselquastig verknurpselt — krömpf? Nödelbratz! Zwäffelknork beschlummrig.",
@@ -43,9 +43,9 @@ export const samples = [
         "dair FREMT-shprah-khun-er-VAIRP kon-shti-too-EERT EYE-nun foon-dah-men-TAH-lun proh-TSES in-ter-kool-too-REL-er pair-shpek-TEE-vun-er-VY-ter-oong, doorkh dayn hah-bee-too-ah-lee-ZEER-tuh DOY-toongs-moos-ter ray-flek-TEERT oont kom-moo-nee-kah-TEE-vuh HAND-loongs-kom-pay-ten-tsun OWS-dif-fay-ren-TSEERT VAIR-dun. IN-buh-zon-duh-ruh dee OWS-eye-nan-der-zet-soong mit SHPRAHKH-shpay-TSI-fi-shun buh-DOY-toongs-noo-AN-sun FUR-dairt may-tah-lin-GVIS-ti-shuh buh-VOOST-hyte, kog-nee-TEE-vuh flek-see-bee-lee-TATE oont dee FAY-ikh-kyte, kom-PLEK-suh guh-ZEL-shaft-li-khuh VIRK-likh-kytes-kon-strook-TSYOH-nun OON-ter buh-RUEK-zikh-ti-goong dee-vair-GEE-run-der er-FAH-roongs-hoh-ree-ZON-tuh dif-fay-ren-TSEERT tsoo buh-OOR-ty-lun",
       ],
       funny: [
-        "Damit ich mich im Ausland wenigstens grammatikalisch korrekt darüber beschweren kann, dass mein Leben den Bach runtergeht. International beschissen, aber mit perfektem Akzent.",
-        "So I can at least complain abroad, with correct grammar, that my life is going down the drain. Internationally shitty, but with a perfect accent.",
-        "dah-MIT ikh mikh im OWS-lant VAY-nik-stuns grah-mah-tee-KAH-lish kor-REKT dah-RUE-ber buh-SHVAY-run kan, das mine LAY-bun dayn bahkh ROON-ter-gayt. in-ter-naht-syoh-NAHL buh-SHIS-un, AH-ber mit pair-FEK-tum ak-TSENT",
+        "Damit ich in zwei Sprachen Scheiße labern kann.",
+        "So I can talk shit in two languages.",
+        "dah-MIT ikh in tsvye SHPRAH-khun SHY-suh LAH-burn kan",
       ],
       gibberish: [
         "Bröckelzwirn schlattenwürgt flömmelkrass, schnurbelnder Quätschflanz! Drüffelwupp knarzeflötig, zömmelbrück verflastert — schnaffelplöpp! Quörkelspatz flimmselbrotz.",
@@ -69,9 +69,9 @@ export const samples = [
         "ikh VUER-duh mikh fuer dee kon-troh-LEER-tuh mah-nee-poo-lah-TSYOHN ROWM-tsyte-li-kher kon-tee-noo-ee-TATE ent-SHY-dun, dah EYE-nuh DAIR-ar-ti-guh FAY-ikh-kyte dee zee-mool-TAH-nuh UE-ber-vin-doong gay-oh-GRAH-fi-sher dis-TANTS-res-trik-TSYOH-nun oont kroh-noh-MAY-tri-sher ray-SOOR-sun-knap-hyte er-MUEG-li-khun VUER-duh. EE-ruh PRAK-ti-shuh AN-vent-bar-kyte LEE-suh zikh IN-buh-zon-duh-ruh doorkh EYE-nuh fair-ANT-vor-toongs-buh-VOOS-tuh FOL-gun-ap-shet-soong zoh-VEE dee buh-RUEK-zikh-ti-goong kow-zah-lee-TATES-buh-tsoh-guh-ner VEKH-zul-vir-koong-un op-tee-MEE-run",
       ],
       funny: [
-        "Ich will Gedanken lesen können. Bei meinem Drucker helfen allerdings nur ein Exorzist und eine verdammte Abrissbirne.",
-        "I want to be able to read minds. For my printer, though, only an exorcist and a goddamn wrecking ball will help.",
-        "ikh vil guh-DAN-kun LAY-zun KOEN-un. by MY-num DROOK-er HEL-fun ah-ler-DINGS noor ine ek-sor-TSIST oont EYE-nuh fair-DAM-tuh AP-ris-beer-nuh",
+        "Unsichtbar sein. Bei Gruppenarbeiten klappt’s schon.",
+        "Be invisible. It already works during group projects.",
+        "OON-zikht-bahr zyne. bye GROO-pun-ar-bye-tun klapts shohn",
       ],
       gibberish: [
         "Grätschenflöck zwörmelt knüffelwärts! Schlabbertrümmel, drösselquonk, fläusig möppeldran; zwackelbrömm verschlödelquast. Krümpelzack schnäffelgrumpf, blömmelpfatz!",
@@ -85,6 +85,6 @@ export function demoAnswer(index: number, mode: Mode): Answer {
   const sample = samples[index % samples.length]; const a = sample.answers[mode];
   return {
     translation: sample.translation, german: a[0], english: a[1], pronunciation: a[2],
-    note: mode === "gibberish" ? "Invented words with no literal meaning. This is not real German." : mode === "funny" ? "Dark situational humor; may contain German profanity." : mode === "fluent" ? "Deliberately excessive academic German." : "Everyday German.",
+    note: mode === "gibberish" ? "Invented words with no literal meaning. This is not real German." : mode === "funny" ? "Short, dry situational humor; may contain German profanity." : mode === "fluent" ? "Deliberately excessive academic German." : "Everyday German.",
   };
 }

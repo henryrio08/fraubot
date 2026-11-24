@@ -57,10 +57,12 @@ Apply each migration only once. Local sign-in uses the starter's loopback-only m
 | --- | --- |
 | Normal | Short, everyday A2/B1 German. |
 | tryhard | Deliberately excessive C2 academic German, long real compound nouns, and complex clauses. |
-| frau destroyer | Punchy dark situational humor with uncensored German swearing. |
+| frau destroyer | Short, blunt comebacks tied to the actual question; deadpan confidence, literal misreadings, and situational roasts. German swearing when it fits. |
 | Gibberish | Invented German-sounding syllables with no literal meaning or fabricated English translation. |
 
 The original speech is translated accurately in every mode. tryhard has a larger output budget for its longer reply, English meaning, and pronunciation.
+
+The frau destroyer prompt uses original calibration examples and aims for roughly 5–18 words. Profanity is allowed without making it mandatory. It removes the earlier funeral/printer stock jokes and asks the model to end on the punchline. The tone was informed by reviewing [public Reel comments](https://www.instagram.com/reel/Dez3kNoPbQe/) and [public TikTok comment screenshots](https://www.boredpanda.com/hilarious-funny-tiktok-replies/). These references inform timing and comic mechanisms; the app does not browse social media or copy comments when generating replies. Humor quality remains subjective; live checks verify the model follows the shorter style and still supplies accurate translation, English meaning, and pronunciation.
 
 **Voice extraction is not implemented.** Audio references are previewed locally; they are not uploaded or used to filter microphone audio. Integrating an actual target-speaker extraction service and evaluating it on German classroom audio is separate work.
 
