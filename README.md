@@ -38,12 +38,15 @@ Chat messages and nicknames are stored in D1, independently of Meta. Posting is 
 
 The public channel has separate tables from the original private-room feature. Existing private-room messages are never included in public chat. The legacy room endpoints remain protected for compatibility.
 
+**Direct messages:** Open **Chat → DMs**, choose a nickname from the people list, or click an author's nickname in class chat. DMs require sign-in and use the same nickname as class chat. The inbox shows recent conversations and unread counts, which survive reloads. Incoming messages are marked read when their conversation is open and visible. Only the authenticated sender and recipient can retrieve a conversation; DMs and inbox previews are never included in public class-chat responses. Like class chat, the latest 100 messages from the last 24 hours are shown. DMs are stored in D1 and do not go to Meta. Sending is limited to 1,000 characters per message, 30 messages per person per minute across recipients, and 120 DM sends across the site per minute. Retried sends are deduplicated within each pair.
+
 The database schema and generated migrations are in `db/schema.ts` and `drizzle/`. Sites provisions the `DB` binding and applies migrations on publication. For a first local chat preview, build once and apply the migration to the local database before running `npm run dev`:
 
 ```sh
 npm run build
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_outgoing_argent.sql
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_fair_blacklash.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_futuristic_rocket_racer.sql
 ```
 
 Apply each migration only once. Local sign-in uses the starter's loopback-only mock; production identity is supplied by Sites.
@@ -87,6 +90,6 @@ npm run typecheck
 npm run build
 ```
 
-Tests cover input limits, untrusted transcript handling, streamed SSE parsing across chunk boundaries, fixed provider destinations, secret redaction, cross-origin rejection, binary WebSocket frame normalization, and PCM conversion at multiple input sample rates. Chat tests execute the actual generated migration and API queries against SQLite, including two-user delivery, room isolation, leave/rejoin, expiry cleanup, retry deduplication, pagination, capacity, and durable send limits. Live provider quality and latency require a funded Meta key and representative microphone audio.
+Tests cover input limits, untrusted transcript handling, streamed SSE parsing across chunk boundaries, fixed provider destinations, secret redaction, cross-origin rejection, binary WebSocket frame normalization, and PCM conversion at multiple input sample rates. Chat tests execute the actual generated migration and API queries against SQLite, including two-user delivery, room isolation, leave/rejoin, expiry cleanup, retry deduplication, pagination, capacity, and durable send limits. DM tests cover participant-only reads, exclusion from public chat, persisted unread state, recipient-only read acknowledgements, pair-specific retries, and limits across recipients. Live provider quality and latency require a funded Meta key and representative microphone audio.
 
 The website can be opened publicly. Live AI generation and Meta listening require a Sites-authenticated ChatGPT identity. D1-backed limits allow 60 reply attempts and 6 listening starts per person each day, with shared site limits of 500 reply attempts and 24 listening starts. Each Meta session is capped at 10 minutes, and a start reserves the entire session allowance even if it fails or ends early. Daily counters use America/Chicago dates. If quota storage is unavailable, paid requests fail closed. These are usage limits, not a dollar-denominated provider spending cap. The limits are defined in `lib/usage.mjs`. No credentials or voice recordings are tracked in Git.
