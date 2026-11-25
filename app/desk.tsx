@@ -4,9 +4,10 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AudioLines, BookOpen, Check, Copy, Download, Headphones, HelpCircle, Keyboard, LoaderCircle, Mic, Play, RotateCcw, Settings2, Square, Trash2, Volume2, X, Bookmark } from "lucide-react";
 import { consumeEvents, partialResult, validResult } from "../lib/assist.mjs";
 import { demoAnswer, samples, type Mode, type Answer } from "../lib/demo";
+import { DEFAULT_RESPONSE_LENGTH, RESPONSE_LENGTHS, isResponseLength, type ResponseLength } from "../lib/reply-length.mjs";
 import RoomChat from "../components/room-chat";
 
-type Turn = { id: string; text: string; time: string; source: "live" | "typed" | "demo"; sample?: number; answer?: Answer; mode?: Mode; busy?: boolean; error?: string; duration?: number; saved?: boolean; speaker?: string; ordinal?: number };
+type Turn = { id: string; text: string; time: string; source: "live" | "typed" | "demo"; sample?: number; answer?: Answer; mode?: Mode; length?: ResponseLength; busy?: boolean; error?: string; duration?: number; saved?: boolean; speaker?: string; ordinal?: number };
 type Config = { configured: boolean; signedIn: boolean; provider: string; limits?: { replies: number; listeningSessions: number; sessionMinutes: number } };
 type Tab = "desk" | "notes" | "audio";
 type Recognition = { lang: string; continuous: boolean; interimResults: boolean; onresult: ((event: any) => void) | null; onerror: ((event: any) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort: () => void };
@@ -21,6 +22,7 @@ const uid = () => crypto.randomUUID();
 
 export default function Desk() {
   const [tab, setTab] = useState<Tab>("desk"); const [mode, setMode] = useState<Mode>("funny");
+  const [responseLength, setResponseLength] = useState<ResponseLength>(DEFAULT_RESPONSE_LENGTH); const lengthRef = useRef<ResponseLength>(DEFAULT_RESPONSE_LENGTH);
   const [turns, setTurns] = useState<Turn[]>([]); const turnsRef = useRef<Turn[]>([]);
   const [selected, setSelected] = useState<string | null>(null); const [partial, setPartial] = useState("");
   const [config, setConfig] = useState<Config | null>(null); const [settings, setSettings] = useState(false); const [help, setHelp] = useState(false);
@@ -38,6 +40,7 @@ export default function Desk() {
   const updateTurns = (fn: (items: Turn[]) => Turn[]) => { const next = fn(turnsRef.current); turnsRef.current = next; setTurns(next); };
   const patchTurn = (id: string, patch: Partial<Turn>) => updateTurns(items => items.map(t => t.id === id ? { ...t, ...patch } : t));
   useEffect(() => { modeRef.current = mode; }, [mode]); useEffect(() => { autoRef.current = autoReply; }, [autoReply]);
+  useEffect(() => { try { const saved = localStorage.getItem("fraubot-response-length"); if (isResponseLength(saved)) { setResponseLength(saved); lengthRef.current = saved; } } catch {} }, []);
   useEffect(() => { fetch("/api/config", { cache: "no-store" }).then(async r => { if (!r.ok) throw new Error(); const value = await r.json() as Config; if (typeof value.configured !== "boolean") throw new Error(); setConfig(value); }).catch(() => setNotice("Connection check failed. Try refreshing.")); }, []);
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, [turns.length, partial]);
   useEffect(() => { if (!listening) return; const start = Date.now(); const timer = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000); return () => clearInterval(timer); }, [listening]);
@@ -69,16 +72,23 @@ export default function Desk() {
     meter(); stream.getAudioTracks()[0].onended = () => stopCapture(false);
     return { context, source };
   }
-  async function analyze(turn: Turn, chosen = modeRef.current) {
+  function changeResponseLength(value: string) {
+    if (!isResponseLength(value)) return;
+    setResponseLength(value); lengthRef.current = value;
+    try { localStorage.setItem("fraubot-response-length", value); } catch {}
+    const current = turnsRef.current.find(t => t.id === selected) || turnsRef.current.at(-1);
+    if (current?.source === "demo") void analyze(current, modeRef.current, value);
+  }
+  async function analyze(turn: Turn, chosen = modeRef.current, length = lengthRef.current) {
     stopSpeech();
     requestRef.current?.abort();
     updateTurns(items => items.map(t => t.busy ? { ...t, busy: false } : t));
-    if (turn.source === "demo") { patchTurn(turn.id, { answer: demoAnswer(turn.sample || 0, chosen), mode: chosen, busy: false, error: undefined }); return; }
+    if (turn.source === "demo") { patchTurn(turn.id, { answer: demoAnswer(turn.sample || 0, chosen, length), mode: chosen, length, busy: false, error: undefined }); return; }
     const controller = new AbortController(); requestRef.current = controller;
-    patchTurn(turn.id, { busy: true, error: undefined, mode: chosen, answer: undefined }); const start = performance.now();
+    patchTurn(turn.id, { busy: true, error: undefined, mode: chosen, length, answer: undefined }); const start = performance.now();
     let resultText = ""; let completed = false;
     try {
-      const response = await fetch("/api/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: turn.text, mode: chosen, context: turnsRef.current.slice(0, turnsRef.current.findIndex(t => t.id === turn.id)).filter(t => t.source !== "demo").slice(-4).map(t => t.text) }), signal: controller.signal });
+      const response = await fetch("/api/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: turn.text, mode: chosen, length, context: turnsRef.current.slice(0, turnsRef.current.findIndex(t => t.id === turn.id)).filter(t => t.source !== "demo").slice(-4).map(t => t.text) }), signal: controller.signal });
       if (!response.ok) { const err = await response.json() as { error?: string }; throw new Error(err.error || "Could not generate a reply."); }
       if (!response.body) throw new Error("The response was empty.");
       await consumeEvents(response.body, (event: any) => {
@@ -285,6 +295,7 @@ export default function Desk() {
       <button className="modal-close icon-button" aria-label="Close dialog" onClick={() => { setSettings(false); setHelp(false); }} autoFocus><X size={23} /></button>
       <h2 id="dialog-title">{settings ? "SETTINGS" : "HOW TO USE"}</h2>
       {settings ? <>
+        <div className="settings-field"><label htmlFor="response-length">Response length</label><select id="response-length" value={responseLength} onChange={e => changeResponseLength(e.target.value)}>{RESPONSE_LENGTHS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select><small>Tryhard stays a little longer than Normal. Applies to new replies and Again.</small></div>
         <div className="connection-card"><strong>{config?.configured ? "Meta connected" : "Meta key needed"}</strong>{!config?.configured && <><p>Add MODEL_API_KEY to the server secrets. Keep the key out of GitHub and browser code.</p><a href="https://dev.meta.ai/" target="_blank" rel="noreferrer">Meta dashboard</a></>}</div>
         <div className="settings-field"><label htmlFor="speech-engine">Microphone service</label><select id="speech-engine" value={engine} disabled={listening || connecting} onChange={e => setEngine(e.target.value as "meta" | "browser")}><option value="meta">Meta</option><option value="browser">Chrome captions</option></select><small>Chrome captions need browser support. Translation and replies still use Meta.</small></div>
         <label className="toggle-row"><div><strong>Reduce background noise</strong><span>Mic processing, not a voice filter.</span></div><input type="checkbox" checked={noise} disabled={listening || testing || connecting} onChange={e => setNoise(e.target.checked)} /></label>
