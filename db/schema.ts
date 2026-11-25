@@ -74,3 +74,11 @@ export const directMessages = sqliteTable("direct_messages", {
   index("direct_messages_time").on(table.createdAt),
   uniqueIndex("direct_messages_retry").on(table.senderId, table.recipientId, table.clientId),
 ]);
+
+export const guestSessions = sqliteTable("guest_sessions", {
+  tokenHash: text("token_hash").primaryKey(),
+  userId: text("user_id").notNull().unique(),
+  networkKey: text("network_key").notNull(),
+  createdAt: integer("created_at").notNull(),
+  expiresAt: integer("expires_at").notNull(),
+}, table => [index("guest_sessions_network_time").on(table.networkKey, table.createdAt), index("guest_sessions_expiry").on(table.expiresAt)]);

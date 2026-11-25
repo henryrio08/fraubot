@@ -13,7 +13,12 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "test": "node --test tests/*.test.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "cloudflare:dev": "node scripts/cloudflare.mjs dev",
+    "cloudflare:build": "node scripts/cloudflare.mjs build",
+    "cloudflare:login": "node scripts/cloudflare.mjs login",
+    "cloudflare:deploy": "node scripts/cloudflare.mjs deploy",
+    "cloudflare:local-db": "node scripts/cloudflare.mjs local-db"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

@@ -6,9 +6,10 @@ import { consumeEvents, partialResult, validResult } from "../lib/assist.mjs";
 import { demoAnswer, samples, type Mode, type Answer } from "../lib/demo";
 import { DEFAULT_RESPONSE_LENGTH, RESPONSE_LENGTHS, isResponseLength, type ResponseLength } from "../lib/reply-length.mjs";
 import RoomChat from "../components/room-chat";
+import GuestEntry from "../components/guest-entry";
 
 type Turn = { id: string; text: string; time: string; source: "live" | "typed" | "demo"; sample?: number; answer?: Answer; mode?: Mode; length?: ResponseLength; busy?: boolean; error?: string; duration?: number; saved?: boolean; speaker?: string; ordinal?: number };
-type Config = { configured: boolean; signedIn: boolean; provider: string; limits?: { replies: number; listeningSessions: number; sessionMinutes: number } };
+type Config = { configured: boolean; signedIn: boolean; authMode?: "chatgpt" | "nickname"; provider: string; limits?: { replies: number; listeningSessions: number; sessionMinutes: number } };
 type Tab = "desk" | "notes" | "audio";
 type Recognition = { lang: string; continuous: boolean; interimResults: boolean; onresult: ((event: any) => void) | null; onerror: ((event: any) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort: () => void };
 const modes: { id: Mode; title: string; emoji: string }[] = [
@@ -26,6 +27,8 @@ export default function Desk() {
   const [turns, setTurns] = useState<Turn[]>([]); const turnsRef = useRef<Turn[]>([]);
   const [selected, setSelected] = useState<string | null>(null); const [partial, setPartial] = useState("");
   const [config, setConfig] = useState<Config | null>(null); const [settings, setSettings] = useState(false); const [help, setHelp] = useState(false);
+  const configRef = useRef<Config | null>(null); const [guestEntry, setGuestEntry] = useState(false);
+  const pendingReply = useRef<{ turn: Turn; mode: Mode; length: ResponseLength } | null>(null);
   const [listening, setListening] = useState(false); const [connecting, setConnecting] = useState(false); const [demoRunning, setDemoRunning] = useState(false);
   const [shouting, setShouting] = useState(false); const shoutRef = useRef<HTMLAudioElement | null>(null);
   const [typed, setTyped] = useState(false); const [input, setInput] = useState(""); const [notice, setNotice] = useState("");
@@ -41,7 +44,8 @@ export default function Desk() {
   const patchTurn = (id: string, patch: Partial<Turn>) => updateTurns(items => items.map(t => t.id === id ? { ...t, ...patch } : t));
   useEffect(() => { modeRef.current = mode; }, [mode]); useEffect(() => { autoRef.current = autoReply; }, [autoReply]);
   useEffect(() => { try { const saved = localStorage.getItem("fraubot-response-length"); if (isResponseLength(saved)) { setResponseLength(saved); lengthRef.current = saved; } } catch {} }, []);
-  useEffect(() => { fetch("/api/config", { cache: "no-store" }).then(async r => { if (!r.ok) throw new Error(); const value = await r.json() as Config; if (typeof value.configured !== "boolean") throw new Error(); setConfig(value); }).catch(() => setNotice("Connection check failed. Try refreshing.")); }, []);
+  async function refreshConfig() { const response = await fetch("/api/config", { cache: "no-store" }); if (!response.ok) throw new Error("Connection check failed. Try refreshing."); const value = await response.json() as Config; if (typeof value.configured !== "boolean") throw new Error("Connection check failed."); configRef.current = value; setConfig(value); }
+  useEffect(() => { void refreshConfig().catch(() => setNotice("Connection check failed. Try refreshing.")); }, []);
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, [turns.length, partial]);
   useEffect(() => { if (!listening) return; const start = Date.now(); const timer = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000); return () => clearInterval(timer); }, [listening]);
   useEffect(() => () => { liveRef.current = false; sessionGeneration.current++; requestRef.current?.abort(); if (speechRef.current) window.speechSynthesis?.cancel(); speechRef.current = null; shoutRef.current?.pause(); demoTimers.current.forEach(clearTimeout); recognitionRef.current?.abort(); streamRef.current?.getTracks().forEach(t => t.stop()); socketRef.current?.close(); void contextRef.current?.close(); cancelAnimationFrame(meterRef.current); if (referenceRef.current) URL.revokeObjectURL(referenceRef.current); }, []);
@@ -80,6 +84,7 @@ export default function Desk() {
     if (current?.source === "demo") void analyze(current, modeRef.current, value);
   }
   async function analyze(turn: Turn, chosen = modeRef.current, length = lengthRef.current) {
+    if (turn.source !== "demo" && configRef.current?.authMode === "nickname" && !configRef.current.signedIn) { pendingReply.current = { turn, mode: chosen, length }; setGuestEntry(true); return; }
     stopSpeech();
     requestRef.current?.abort();
     updateTurns(items => items.map(t => t.busy ? { ...t, busy: false } : t));
@@ -115,7 +120,7 @@ export default function Desk() {
     stopSpeech();
     if (listening || connecting || demoRunning) { stopDemo(); stopCapture(); return; }
     if (startingRef.current) return;
-    if (!config?.signedIn) { setNotice("Sign in to use live translation and replies."); return; }
+    if (!config?.signedIn) { if (config?.authMode === "nickname") setGuestEntry(true); else setNotice("Sign in to use live translation and replies."); return; }
     if (engine === "meta" && !config?.configured) { setSettings(true); return; }
     startingRef.current = true; setConnecting(true); setNotice(""); stopDemo();
     try {
@@ -185,7 +190,7 @@ export default function Desk() {
     if (voice) speech.voice = voice;
     speechRef.current = speech; setSpeaking(true);
     speech.onend = () => { if (speechRef.current === speech) { speechRef.current = null; setSpeaking(false); } };
-    speech.onerror = event => { if (speechRef.current !== speech) return; speechRef.current = null; setSpeaking(false); if (!["canceled", "interrupted"].includes(event.error)) setNotice("German audio is unavailable here. You can still use the written guide."); };
+    speech.onerror = event => { if (speechRef.current !== speech) return; speechRef.current = null; setSpeaking(false); if (!["canceled", "interrupted"].includes(event.error)) setNotice("German audio is unavailable here. You can still read the German reply."); };
     window.speechSynthesis.speak(speech);
   }
   function shoutLeute() {
@@ -203,7 +208,7 @@ export default function Desk() {
     <header className="site-header">
       <div className="brand-lockup"><button className="wordmark" onClick={() => setTab("desk")} aria-label="LEUTE home">LEUTE<span>!</span></button><span className="project-name">fraubot</span></div>
       <nav className="utility-nav" aria-label="Tools">
-        <RoomChat />
+        <RoomChat guestAccess={config?.authMode === "nickname"} onJoin={() => setGuestEntry(true)} />
         <button aria-label="History" title="History" className={tab === "notes" ? "utility-button selected" : "utility-button"} onClick={() => setTab(tab === "notes" ? "desk" : "notes")}><BookOpen size={18} /><span>History</span>{turns.length > 0 && <b>{turns.length}</b>}</button>
         <button aria-label="Mic check" title="Mic check" className={tab === "audio" ? "utility-button selected" : "utility-button"} onClick={() => setTab(tab === "audio" ? "desk" : "audio")}><Headphones size={18} /><span>Mic check</span></button>
         <button className="utility-button settings-button" aria-label="Settings" onClick={() => setSettings(true)}><Settings2 size={20} /></button>
@@ -211,7 +216,7 @@ export default function Desk() {
     </header>
 
     <main>
-      {config && !config.signedIn && <div className="sign-in-banner"><span>Sign in for live translation and posting in chat.</span><a className="plain-button" href="/signin-with-chatgpt?return_to=%2F" target="_top">Sign in</a></div>}
+      {config && !config.signedIn && <div className="sign-in-banner"><span>{config.authMode === "nickname" ? "Pick a nickname to use the mic, replies, and chat." : "Sign in for live translation and posting in chat."}</span>{config.authMode === "nickname" ? <button className="plain-button" onClick={() => setGuestEntry(true)}>Enter</button> : <a className="plain-button" href="/signin-with-chatgpt?return_to=%2F" target="_top">Sign in</a>}</div>}
       {tab === "desk" && <>
         <section className="control-bar" aria-label="Listening controls">
           <button className={`listen-button ${listening || connecting ? "is-live" : ""}`} onClick={startSession}>
@@ -289,6 +294,7 @@ export default function Desk() {
       <footer className="site-footer"><span>Use the mic with everyone’s permission.</span><button className="connection-button" onClick={() => setSettings(true)}>{config === null ? "Connecting…" : config.configured ? <><Check size={14} />Connected</> : "Set up connection"}</button></footer>
     </main>
 
+    {guestEntry && <GuestEntry onClose={() => { setGuestEntry(false); pendingReply.current = null; }} onJoined={async () => { await refreshConfig(); setGuestEntry(false); const pending = pendingReply.current; pendingReply.current = null; if (pending) void analyze(pending.turn, pending.mode, pending.length); }} />}
     <audio ref={shoutRef} src="/leute.wav" preload="auto" onPlay={() => setShouting(true)} onEnded={() => setShouting(false)} onError={() => { setShouting(false); setNotice("The LEUTE clip couldn’t load. Try refreshing."); }} />
     {notice && <div className="toast" role="status"><HelpCircle size={19} /><span>{notice}</span><button className="icon-button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={17} /></button></div>}
     {(settings || help) && <div className="modal-backdrop" onClick={() => { setSettings(false); setHelp(false); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" onClick={e => e.stopPropagation()} onKeyDown={e => { if (e.key !== "Tab") return; const nodes = e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), summary'); const first = nodes[0]; const last = nodes[nodes.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); } }}>

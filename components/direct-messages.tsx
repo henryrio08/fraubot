@@ -131,13 +131,13 @@ export function useDirectMessages(me: Person | null, visible: boolean) {
   return { people, conversations, unread, peer, messages, search, setSearch, draft, setDraft, busy, loaded, threadLoaded, error, retrying, selectPeer, sendMessage };
 }
 
-type Props = { state: ReturnType<typeof useDirectMessages>; me: Person | null; signedIn: boolean };
-export default function DirectMessages({ state: dm, me, signedIn }: Props) {
+type Props = { state: ReturnType<typeof useDirectMessages>; me: Person | null; signedIn: boolean; guestAccess?: boolean; onJoin?: () => void };
+export default function DirectMessages({ state: dm, me, signedIn, guestAccess = false, onJoin }: Props) {
   const log = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
   useEffect(() => { stickToBottom.current = true; }, [dm.peer?.id]);
   useEffect(() => { if (stickToBottom.current && log.current) log.current.scrollTop = log.current.scrollHeight; }, [dm.messages]);
-  if (!signedIn) return <div className="dm-access"><p>Sign in to use private messages.</p><a className="solid-button" href="/signin-with-chatgpt?return_to=%2F" target="_top">Sign in</a></div>;
+  if (!signedIn) return <div className="dm-access"><p>{guestAccess ? "Pick a nickname to use private messages." : "Sign in to use private messages."}</p>{guestAccess ? <button className="solid-button" onClick={onJoin}>Enter</button> : <a className="solid-button" href="/signin-with-chatgpt?return_to=%2F" target="_top">Sign in</a>}</div>;
   if (!me) return <div className="dm-access"><p>Choose a nickname above to use direct messages.</p></div>;
   if (!dm.peer) {
     const query = dm.search.trim().toLocaleLowerCase();

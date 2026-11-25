@@ -23,7 +23,8 @@ async function api<T>(path = "", body?: object, signal?: AbortSignal): Promise<T
 }
 const time = (value: number) => new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-export default function RoomChat() {
+export default function RoomChat({ guestAccess = false, onJoin }: { guestAccess?: boolean; onJoin?: () => void }) {
+  const join = () => { setOpen(false); onJoin?.(); };
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<"class" | "dm">("class");
   const [signedIn, setSignedIn] = useState(false);
@@ -143,7 +144,7 @@ export default function RoomChat() {
         </div>
         <div className="chat-connection" role="status">{connection === "retrying" ? "Reconnecting…" : "Messages update automatically."}</div>
         {error && <p className="chat-error chat-send-error" role="alert">{error}</p>}
-        {loaded && !signedIn ? <div className="chat-signin"><span>Sign in to post.</span><a className="solid-button" href="/signin-with-chatgpt?return_to=%2F" target="_top">Sign in</a></div> : <form className="chat-compose" onSubmit={sendMessage}><label className="sr-only" htmlFor="chat-message">Message</label><textarea id="chat-message" rows={2} maxLength={1000} placeholder={me ? "Message the class…" : "Choose a nickname to post"} value={draft} disabled={busy || !me} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void sendMessage(); } }} /><div><span>{draft.length}/1,000 · Shift+Enter for a new line</span><button className="solid-button" disabled={busy || !me || !draft.trim()}>{busy ? "Sending…" : "Send"}</button></div></form>}</div> : <div id="dm-panel" className="chat-channel-panel" role="tabpanel" aria-labelledby="dm-tab"><DirectMessages state={dm} me={me} signedIn={signedIn} /></div>}
+        {loaded && !signedIn ? <div className="chat-signin"><span>{guestAccess ? "Pick a nickname to post." : "Sign in to post."}</span>{guestAccess ? <button className="solid-button" onClick={join}>Enter</button> : <a className="solid-button" href="/signin-with-chatgpt?return_to=%2F" target="_top">Sign in</a>}</div> : <form className="chat-compose" onSubmit={sendMessage}><label className="sr-only" htmlFor="chat-message">Message</label><textarea id="chat-message" rows={2} maxLength={1000} placeholder={me ? "Message the class…" : "Choose a nickname to post"} value={draft} disabled={busy || !me} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void sendMessage(); } }} /><div><span>{draft.length}/1,000 · Shift+Enter for a new line</span><button className="solid-button" disabled={busy || !me || !draft.trim()}>{busy ? "Sending…" : "Send"}</button></div></form>}</div> : <div id="dm-panel" className="chat-channel-panel" role="tabpanel" aria-labelledby="dm-tab"><DirectMessages state={dm} me={me} signedIn={signedIn} guestAccess={guestAccess} onJoin={join} /></div>}
       </section>
     </div>, document.body)}
   </>;

@@ -43,6 +43,7 @@ voice-samples/
 # Checkout-local tool state
 /.wrangler/
 /.sites-runtime/
+/.cloudflare/
 
 # Workspace scaffolding and publication archives
 /.agents/

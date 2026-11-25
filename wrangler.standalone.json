@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "fraubot",
+  "main": "worker/standalone.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "vars": {
+    "AUTH_MODE": "nickname"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fraubot-classroom",
+      "database_id": "00000000-0000-4000-8000-000000000001",
+      "migrations_dir": "drizzle"
+    }
+  ]
+}

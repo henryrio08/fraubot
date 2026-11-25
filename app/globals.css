@@ -380,3 +380,10 @@ button svg { flex-shrink: 0; }
   .chat-header { padding: 20px; }
   .chat-header h2 { font-size: 28px; }
 }
+
+.guest-backdrop { z-index: 100; }
+.guest-entry { width: 420px; }
+.guest-entry label { display: block; font-weight: 700; margin-bottom: 10px; }
+.guest-entry input { width: 100%; padding: 12px; border: 1.5px solid var(--ink); border-radius: 5px; font-size: 17px; }
+.guest-entry form>p { font-size: 14px; line-height: 1.6; margin: 13px 0 18px; color: #655b70; }
+.guest-entry .solid-button { width: 100%; }

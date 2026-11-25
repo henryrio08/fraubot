@@ -16,6 +16,30 @@ Add your Meta dashboard key to `MODEL_API_KEY` in `.dev.vars`. The file is ignor
 
 The example session works immediately without any credentials. It is prewritten and clearly labeled. Live AI features show a connection message until the key is configured. Chrome's optional speech engine can provide transcripts without a Meta key, subject to browser and school policies; AI translation and replies still need Meta.
 
+## Independent Cloudflare hosting
+
+The standalone build runs on a Cloudflare `workers.dev` address with nickname-only entry. It has its own database and browser sessions, with no ChatGPT sign-in. The existing Sites deployment continues using its platform identity until the new host is deployed.
+
+From this checkout, run:
+
+```sh
+npm run cloudflare:login
+npm run cloudflare:deploy
+```
+
+Complete the Cloudflare login and Wrangler consent in your browser. Deployment creates the `fraubot-classroom` D1 database, applies migrations, builds the independent Worker, and prints its real URL. It uploads `MODEL_API_KEY` from the ignored `.dev.vars` file through stdin to a Worker secret. Keep that file private. Account-specific configuration and standalone build output stay in the ignored `.cloudflare/` directory. If a database with the same name already exists, resolve that conflict before retrying creation.
+
+The new database starts with fresh nicknames and chat history. A random, HttpOnly, Secure, same-site cookie identifies a browser; only its SHA-256 hash is stored server-side. Nicknames are not passwords and cannot be used to take over another browser's identity. Clearing site data or changing browsers starts a new identity. DMs remain scoped to the two browser identities, and the existing daily AI and message limits remain enforced. New sessions have durable creation limits and expire after 180 days.
+
+To preview the standalone flow locally:
+
+```sh
+npm run cloudflare:local-db
+npm run cloudflare:dev
+```
+
+`npm run cloudflare:build` produces a reviewable standalone build at `.cloudflare/dist` without deploying. Normal `npm run dev` / `npm run build` retain the Sites integration.
+
 ## Features
 
 - Meta Muse Voice Transcribe, streaming mono PCM16 over a server-proxied WebSocket.
