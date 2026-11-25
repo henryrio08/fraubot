@@ -57,3 +57,17 @@ test("all prewritten demos fit every length without cutting sentences or their t
     else assert.doesNotMatch(reply.english, /No literal translation/);
   }
 });
+
+test("Gibberish demos mix word sizes and endings instead of repeating one suffix", () => {
+  for (let sample = 0; sample < 3; sample++) for (const { id } of RESPONSE_LENGTHS) {
+    const words = demoReply(sample, "gibberish", id).german.toLocaleLowerCase("de").match(/[a-zäöüß]+/g);
+    const counts = new Map();
+    for (const word of words) { const ending = word.slice(-3); counts.set(ending, (counts.get(ending) || 0) + 1); }
+    assert.ok(Math.max(...counts.values()) <= Math.max(2, Math.ceil(words.length / 4)), `${sample} ${id}: repeated ending`);
+    assert.ok(new Set(words).size >= words.length * .9, "avoid recycled whole words");
+    if (words.length >= 10) {
+      assert.ok(words.some(word => word.length <= 5), "include short invented particles");
+      assert.ok(words.some(word => word.length >= 9), "mix in occasional longer forms");
+    }
+  }
+});

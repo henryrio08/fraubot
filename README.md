@@ -24,6 +24,7 @@ The example session works immediately without any credentials. It is prewritten 
 - Accurate English translation plus Normal, tryhard, frau destroyer, and Gibberish reply modes.
 - Streaming replies with the German response, English meaning, and copy.
 - German audio playback with stop controls.
+- Gibberish demos mix short particles, verb-like forms, and longer invented nouns rather than giving consecutive words the same suffix. Live prompts also explicitly request varied endings and sentence rhythm.
 - Five response lengths in Settings, remembered in this browser: Really short, Short, Medium, High, and Extra high. New replies and Again use the selection; demos resize immediately. Tryhard targets a longer reply than Normal at every setting.
 - Typed input, scripted examples, in-tab session notes, bookmarks, and text export.
 - Local microphone level test and local audio-reference preview.
@@ -58,20 +59,20 @@ Apply each migration only once. Local sign-in uses the starter's loopback-only m
 | --- | --- |
 | Normal | Short, everyday A2/B1 German. |
 | tryhard | Deliberately excessive C2 academic German, long real compound nouns, and complex clauses. |
-| frau destroyer | Short, crude, sarcastic comebacks tied to the actual question; petty confidence, shameless excuses, and situational roasts. Uncensored German swearing by default. |
-| Gibberish | Invented German-sounding syllables with no literal meaning or fabricated English translation. |
+| frau destroyer | Coherent, pointed replies to the teacher's questions and classroom demands. Critiques the interaction rather than personal traits; German swearing by default. |
+| Gibberish | Invented German-like speech with varied word sizes, particles, verb-like forms, and endings; no literal meaning or fabricated English translation. |
 
 The original speech is translated accurately in every mode. Response length controls only the suggested German reply; its full English meaning and the original utterance's translation stay complete. Short is the default for existing clients. Targets are approximate, and output budgets scale with the mode and selected length.
 
 | Response length | Normal words | tryhard words | frau destroyer words | Gibberish words |
 | --- | --- | --- | --- | --- |
-| Really short | 3–7 | 10–16 | 3–7 | 4–8 |
-| Short | 8–18 | 22–35 | 8–18 | 10–18 |
-| Medium | 25–40 | 45–65 | 22–40 | 25–40 |
-| High | 55–80 | 90–120 | 45–70 | 50–75 |
-| Extra high | 100–140 | 155–200 | 80–120 | 90–130 |
+| Really short | 3–7 | 10–16 | 8–14 | 4–8 |
+| Short | 8–18 | 22–35 | 22–35 | 10–18 |
+| Medium | 25–40 | 45–65 | 45–65 | 25–40 |
+| High | 55–80 | 90–120 | 80–110 | 50–75 |
+| Extra high | 100–140 | 155–200 | 130–170 | 90–130 |
 
-The frau destroyer prompt draws from [a curated reference dataset](data/humor-reference.json): 22 short source excerpts and 24 original German classroom examples linked to eight popular-video/comment sources. Source records separate primary pages from public captures, document reported engagement snapshots, and label inferred context. These are style references, not copied comments or a fine-tuning upload. Each request selects up to eight examples, favoring those relevant to the latest question. Reply length follows the selected setting, with 8–18 words of real, coherent German at the default Short setting. Clarity and relevance take priority over the punchline; sarcasm changes the attitude, not the meaning. Ordinary classroom replies now default to a natural, uncensored German swear integrated into the joke. Original adaptations use cruder situational sarcasm; the source excerpts are unchanged. Serious distress or harm is an exception to the roast tone. It removes the earlier funeral/printer stock jokes and asks the model to end on the punchline. The tone was informed by reviewing [public Reel comments](https://www.instagram.com/reel/Dez3kNoPbQe/) and [public TikTok comment screenshots](https://www.boredpanda.com/hilarious-funny-tiktok-replies/). These references inform timing and comic mechanisms; the app does not browse social media or copy comments when generating replies. Humor quality remains subjective; live checks verify the model follows the shorter style and still supplies accurate translation and English meaning.
+The frau destroyer prompt draws from [a curated reference dataset](data/humor-reference.json): 22 short source excerpts and 24 original German classroom examples linked to eight popular-video/comment sources. Source records separate primary pages from public captures, document reported engagement snapshots, and label inferred context. These are style references, not copied comments or a fine-tuning upload. Each request selects up to eight examples, favoring those relevant to the latest question. Reply length follows the selected setting, with 22–35 words of real, coherent German at the default Short setting. Clarity and relevance take priority over the punchline; sarcasm changes the attitude, not the meaning. Ordinary classroom replies now default to a natural, uncensored German swear integrated into the joke. Original adaptations now answer the question and push back on classroom demands, repetitive instructions, unclear wording, or workload; they avoid personal attacks and invented accusations. The source excerpts are unchanged. Serious distress or harm is an exception to the roast tone. It removes the earlier funeral/printer stock jokes and asks the model to end on the punchline. The tone was informed by reviewing [public Reel comments](https://www.instagram.com/reel/Dez3kNoPbQe/) and [public TikTok comment screenshots](https://www.boredpanda.com/hilarious-funny-tiktok-replies/). These references inform timing and comic mechanisms; the app does not browse social media or copy comments when generating replies. Humor quality remains subjective; live checks verify the model follows the requested length and mode and still supplies accurate translation and English meaning.
 
 **Voice extraction is not implemented.** Audio references are previewed locally; they are not uploaded or used to filter microphone audio. Integrating an actual target-speaker extraction service and evaluating it on German classroom audio is separate work.
 
