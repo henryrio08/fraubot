@@ -109,7 +109,6 @@ button svg { flex-shrink: 0; }
 .reply-actions button { display: flex; align-items: center; gap: 6px; padding: 0; background: none; border: 0; font-size: 14px; font-weight: 700; }
 .reply-actions button:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 3px; }
 .reply-actions .regenerate { margin-left: auto; }
-.phonetic-icon { font: bold 17px/1 Georgia, serif; }
 .example-label { font: 700 11px "Courier New", monospace; color: #675779; padding: 16px 24px 0; }
 .nonsense-label { display: inline-block; padding: 7px 10px; border: 1px solid #ab7d95; border-radius: 4px; margin-top: 17px; font-size: 12px; font-weight: 600; }
 .reply-error { padding: 24px; flex: 1; }
@@ -203,7 +202,7 @@ button svg { flex-shrink: 0; }
   .german-reply { font-size: 25px; }
   .reply-actions { gap: 15px; padding: 17px; }
   .reply-actions button { gap: 5px; }
-  .reply-actions button>span:not(.phonetic-icon) { display: none; }
+  .reply-actions button>span { display: none; }
 }
 @media (max-width: 760px) {
   .app-shell { width: calc(100% - 36px); }
@@ -243,7 +242,7 @@ button svg { flex-shrink: 0; }
   .answer-content { padding: 22px; }
   .german-reply { font-size: 27px; }
   .reply-actions { gap: 19px; padding: 17px 19px; }
-  .reply-actions button>span:not(.phonetic-icon) { display: inline; }
+  .reply-actions button>span { display: inline; }
   .reply-actions button { font-size: 13px; }
   .reply-actions .regenerate>span { display: none!important; }
   .site-footer { font-size: 11px; align-items: flex-start; line-height: 1.5; }
@@ -271,7 +270,7 @@ button svg { flex-shrink: 0; }
   .quick-actions .plain-button { padding: 9px 11px; }
   .mode-button { gap: 7px; padding: 10px; }
   .mode-emoji { font-size: 23px; }
-  .reply-actions button>span:not(.phonetic-icon) { display: none; }
+  .reply-actions button>span { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *:before, *:after { animation: none!important; transition: none!important; scroll-behavior: auto!important; }
@@ -300,32 +299,6 @@ button svg { flex-shrink: 0; }
   .listen-button { font-size: 24px; padding: 15px 12px; gap: 9px; }
   .listen-button svg { width: 24px; }
   .shout-button { padding: 15px 12px; font-size: 27px; }
-}
-
-/* Keep pronunciation visible directly under the German reply. */
-.pronunciation { background: #ffffff85; border: 1.5px dashed #22212150; border-radius: 7px; padding: 16px; margin: 20px 0 0; }
-.pronunciation-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.pronunciation-heading h3 { font: 800 12px/1.4 "Courier New", monospace; letter-spacing: .8px; color: #4d3d61; }
-.pronunciation-audio { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; padding: 6px 8px; font-size: 13px; font-weight: 700; border: 1px solid #79668c; border-radius: 5px; background: #fff9; color: #49355e; }
-.pronunciation-audio:hover { background: #fff; }
-.pronunciation .pronunciation-text { font: 400 17px/1.9 Arial, Helvetica, sans-serif; color: #473653; letter-spacing: .15px; margin: 12px 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.pronunciation-text strong { font-weight: 850; color: #221a2a; }
-.pronunciation-pending { font-size: 14px; color: #776580; }
-.pronunciation-help { display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: space-between; font-size: 11px; line-height: 1.5; color: #796583; }
-.sound-key { margin-top: 12px; padding-top: 11px; border-top: 1px solid #89769635; }
-.sound-key summary { cursor: pointer; font-size: 12px; font-weight: 600; color: #6a4f7d; }
-.sound-key dl { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
-.sound-key dl>div { display: flex; gap: 13px; font-size: 13px; line-height: 1.6; }
-.sound-key dt { flex: 0 0 52px; font-weight: 800; }
-.sound-key dd { margin: 0; color: #6d5479; }
-.sound-key>a { color: #6a4f7d; font-size: 12px; }
-.note-answer .pronunciation { margin: 15px 0; background: #fff8; }
-.note-answer .pronunciation .pronunciation-text { font-size: 16px; font-weight: 400; }
-@media (max-width: 760px) {
-  .pronunciation { padding: 14px; margin-top: 18px; }
-  .pronunciation .pronunciation-text { font-size: 17px; line-height: 1.85; }
-  .pronunciation-heading h3 { font-size: 11px; letter-spacing: .5px; }
-  .pronunciation-audio { font-size: 12px; }
 }
 
 /* The chat drawer leaves the listening desk one click away. */

@@ -33,6 +33,19 @@ test("all modes preserve accurate translation and keep transcripts untrusted", (
     assert.equal(payload.text.format.strict, true);
   }
 });
+test("real German modes never receive the invented-language contract", () => {
+  for (const mode of ["natural", "fluent", "funny"]) {
+    const payload = buildPayload({ ...input, mode, context: [] });
+    assert.doesNotMatch(payload.instructions, /Schrömpelzwack|Every word must be invented|no literal translation|pronunciation guide/i);
+    assert.match(payload.instructions, /Use only real German words/);
+    assert.deepEqual(payload.text.format.schema.required, ["translation", "german", "english", "note"]);
+    assert.equal(Object.hasOwn(payload.text.format.schema.properties, "pronunciation"), false);
+  }
+  const invented = buildPayload({ ...input, mode: "gibberish", context: [] });
+  assert.match(invented.instructions, /Every word must be invented/);
+  assert.match(invented.instructions, /no literal translation/);
+  assert.doesNotMatch(invented.instructions, /FRAU DESTROYER MODE/);
+});
 test("partial JSON decodes quoted umlauts without exposing unfinished fields", () => {
   assert.deepEqual(partialResult('{"translation":"He said \\"hi\\".","german":"Grüße","english":"unfin'), { translation: 'He said "hi".', german: "Grüße" });
   assert.equal(validResult({ german: "Hallo" }), false);

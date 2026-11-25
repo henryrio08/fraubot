@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AudioLines, BookOpen, Check, Copy, Download, Headphones, HelpCircle, Keyboard, LoaderCircle, Mic, Play, RotateCcw, Settings2, Square, Trash2, Volume2, X, Bookmark } from "lucide-react";
 import { consumeEvents, partialResult, validResult } from "../lib/assist.mjs";
 import { demoAnswer, samples, type Mode, type Answer } from "../lib/demo";
-import PronunciationGuide from "../components/pronunciation-guide";
 import RoomChat from "../components/room-chat";
 
 type Turn = { id: string; text: string; time: string; source: "live" | "typed" | "demo"; sample?: number; answer?: Answer; mode?: Mode; busy?: boolean; error?: string; duration?: number; saved?: boolean; speaker?: string; ordinal?: number };
@@ -83,15 +82,16 @@ export default function Desk() {
       if (!response.ok) { const err = await response.json() as { error?: string }; throw new Error(err.error || "Could not generate a reply."); }
       if (!response.body) throw new Error("The response was empty.");
       await consumeEvents(response.body, (event: any) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || requestRef.current !== controller) return;
         if (event.type === "response.output_text.delta") { resultText += event.delta; patchTurn(turn.id, { answer: partialResult(resultText) as Answer }); }
         if (event.type === "response.completed") completed = true;
         if (["response.failed", "response.incomplete", "error"].includes(event.type)) throw new Error("The reply could not finish. Please retry.");
       });
+      if (controller.signal.aborted || requestRef.current !== controller) return;
       if (!completed) throw new Error("The connection closed before the reply finished. Please retry.");
       const answer = JSON.parse(resultText); if (!validResult(answer)) throw new Error("The reply was incomplete. Please retry.");
       patchTurn(turn.id, { answer, busy: false, duration: performance.now() - start });
-    } catch (error) { if (!controller.signal.aborted) patchTurn(turn.id, { busy: false, answer: undefined, error: error instanceof Error ? error.message : "Connection interrupted." }); }
+    } catch (error) { if (!controller.signal.aborted && requestRef.current === controller) patchTurn(turn.id, { busy: false, answer: undefined, error: error instanceof Error ? error.message : "Connection interrupted." }); }
   }
   function addFinal(text: string, source: Turn["source"] = "live", speaker?: string, sample?: number, ordinal = ++sequenceRef.current, preservePartial = false) {
     if (!text.trim()) return;
@@ -157,7 +157,7 @@ export default function Desk() {
   const active = turns.find(t => t.id === selected) || turns.at(-1); const chosenMode = modes.find(m => m.id === mode)!;
   const modeSelect = (next: Mode) => { setMode(next); modeRef.current = next; if (active) void analyze(active, next); };
   function exportNotes() {
-    const text = turns.map(t => `[${t.time}] ${t.source === "demo" ? "EXAMPLE" : "GERMAN"}: ${t.text}\n${t.answer?.translation ? "ENGLISH: " + t.answer.translation : ""}\n${t.answer?.german ? "SUGGESTED REPLY (" + t.mode + "): " + t.answer.german + "\nPRONUNCIATION: " + t.answer.pronunciation + "\nMEANING: " + t.answer.english : ""}`).join("\n\n");
+    const text = turns.map(t => `[${t.time}] ${t.source === "demo" ? "EXAMPLE" : "GERMAN"}: ${t.text}\n${t.answer?.translation ? "ENGLISH: " + t.answer.translation : ""}\n${t.answer?.german ? "SUGGESTED REPLY (" + t.mode + "): " + t.answer.german + "\nMEANING: " + t.answer.english : ""}`).join("\n\n");
     const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" })); const link = document.createElement("a"); link.href = url; link.download = "leute-session.txt"; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   async function copyReply() { if (!active?.answer?.german) return; try { await navigator.clipboard.writeText(active.answer.german); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { setNotice("Clipboard unavailable. Select the reply text to copy it."); } }
@@ -251,7 +251,6 @@ export default function Desk() {
             {active?.source === "demo" && <span className="example-label">PREWRITTEN DEMO</span>}
             {active?.error ? <div className="reply-error"><HelpCircle size={30} /><h3>Could not generate a reply.</h3><p>{active.error}</p><button className="solid-button" onClick={() => config?.configured ? void analyze(active) : setSettings(true)}>{config?.configured ? "Try again" : "Open settings"}</button></div> : active?.answer?.german ? <div className="answer-content">
               <p className="german-reply" lang="de">{active.answer.german}</p>
-              <PronunciationGuide text={active.answer.pronunciation} loading={!!active.busy} onSlow={() => speakReply(.62)} onStop={stopSpeech} speaking={speaking} />
               <p className="english-reply">{active.answer.english || "Translating the reply…"}</p>
               {mode === "gibberish" && <span className="nonsense-label">Made-up German. On purpose.</span>}
             </div> : <div className="reply-empty"><h3>{active?.busy ? "Generating reply…" : "No reply yet."}</h3></div>}
@@ -266,7 +265,7 @@ export default function Desk() {
 
       {tab === "notes" && <section className="paper-panel notes-panel">
         <div className="panel-heading"><h1>HISTORY <span className="count">{turns.length}</span></h1><div className="heading-actions"><button className="plain-button" onClick={exportNotes} disabled={!turns.length}><Download size={16} />Save text</button><button className="icon-button" aria-label="Back to listening" onClick={() => setTab("desk")}><X size={20} /></button></div></div>
-        {!turns.length ? <div className="simple-empty"><span aria-hidden="true">📋</span><h2>No history yet.</h2><button className="solid-button" onClick={() => setTab("desk")}>Back to listening</button></div> : <div className="notes-list">{turns.map(t => <article key={t.id}><div className="turn-meta">{t.source === "demo" ? "DEMO" : t.time}<button className="icon-button" aria-label={t.saved ? "Remove bookmark" : "Bookmark utterance"} onClick={() => patchTurn(t.id, { saved: !t.saved })}><Bookmark size={17} fill={t.saved ? "currentColor" : "none"} /></button></div><h3 lang="de">{t.text}</h3><p>{t.answer?.translation || "Not translated yet."}</p>{t.answer?.german && <div className="note-answer"><span>{modes.find(m => m.id === t.mode)?.title || "REPLY"}</span><p lang="de">{t.answer.german}</p><PronunciationGuide text={t.answer.pronunciation} /><small>{t.answer.english}</small></div>}</article>)}</div>}
+        {!turns.length ? <div className="simple-empty"><span aria-hidden="true">📋</span><h2>No history yet.</h2><button className="solid-button" onClick={() => setTab("desk")}>Back to listening</button></div> : <div className="notes-list">{turns.map(t => <article key={t.id}><div className="turn-meta">{t.source === "demo" ? "DEMO" : t.time}<button className="icon-button" aria-label={t.saved ? "Remove bookmark" : "Bookmark utterance"} onClick={() => patchTurn(t.id, { saved: !t.saved })}><Bookmark size={17} fill={t.saved ? "currentColor" : "none"} /></button></div><h3 lang="de">{t.text}</h3><p>{t.answer?.translation || "Not translated yet."}</p>{t.answer?.german && <div className="note-answer"><span>{modes.find(m => m.id === t.mode)?.title || "REPLY"}</span><p lang="de">{t.answer.german}</p><small>{t.answer.english}</small></div>}</article>)}</div>}
         <div className="notes-footer"><span>Gone when you reload. Save it if you want it.</span><button className="text-button" onClick={clearSession} disabled={!turns.length}><Trash2 size={14} />Clear</button></div>
       </section>}
 
