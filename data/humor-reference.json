@@ -173,8 +173,8 @@
         "extraaufgab"
       ],
       "question": "Machst du freiwillig noch eine Zusatzaufgabe?",
-      "reply": "Freiwillig? Ist das ein Tippfehler?",
-      "english": "Voluntarily? Is that a typo?",
+      "reply": "Freiwillig noch mehr Scheißaufgaben? So schlecht geht’s mir noch nicht.",
+      "english": "Voluntarily do more shitty assignments? Things are not that bad for me yet.",
       "source_observation": "Question the supposedly attractive part of the offer.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 2
@@ -237,8 +237,8 @@
         "lesen"
       ],
       "question": "Hast du den Text verstanden?",
-      "reply": "Ich erkenne die Schriftart.",
-      "english": "I recognize the font.",
+      "reply": "Kein Wort. Aber die Schriftart ist verdammt gut lesbar.",
+      "english": "Not a word. But the font is damn easy to read.",
       "source_observation": "Answer the superficial detail instead of the actual task.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 0
@@ -253,8 +253,8 @@
         "gehalten"
       ],
       "question": "Wie war deine Präsentation?",
-      "reply": "Fehlerfrei. Wenn man den Inhalt ausblendet.",
-      "english": "Flawless. If you ignore the content.",
+      "reply": "Beschissen. Dafür hab ich den Scheiß komplett frei erfunden.",
+      "english": "Shitty. But I made all that shit up myself.",
       "source_observation": "Attach a condition that destroys the confident claim.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 1
@@ -269,8 +269,8 @@
         "wiederhol"
       ],
       "question": "Kannst du das bitte noch einmal auf Deutsch sagen?",
-      "reply": "Klar. Ich hab den Fehler inzwischen auswendig gelernt.",
-      "english": "Sure. I have memorized the mistake by now.",
+      "reply": "Klar. Den Scheiß hab ich jetzt sogar falsch auswendig gelernt.",
+      "english": "Sure. I have even memorized that shit wrong now.",
       "source_observation": "Treat repeating the failure as a perfected performance.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 2
@@ -285,8 +285,8 @@
         "leicht"
       ],
       "question": "Das ist eine ganz einfache Einstiegsfrage.",
-      "reply": "Warum hat die Einstiegsfrage dann schon einen Endgegner?",
-      "english": "Why does the introductory question already have a final boss?",
+      "reply": "Für eine Einstiegsfrage hat der Scheiß verdammt viele Endgegner.",
+      "english": "For an introductory question, this shit has a damn lot of final bosses.",
       "source_observation": "Name the gap between the advertised and actual difficulty.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 0
@@ -301,8 +301,8 @@
         "unterschied"
       ],
       "question": "Was ist der Unterschied zwischen Dativ und Akkusativ?",
-      "reply": "Beim einen rate ich. Beim anderen auch.",
-      "english": "I guess with one. With the other too.",
+      "reply": "Anderer Fall, dieselbe Scheiße. Ich rate bei beiden.",
+      "english": "Different case, same shit. I guess with both.",
       "source_observation": "Set up a distinction and collapse it at the end.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 1
@@ -333,8 +333,8 @@
         "geh bitte"
       ],
       "question": "Dann geh bitte vor die Tür.",
-      "reply": "Danke. Endlich eine Aufgabe, die ich sofort verstehe.",
-      "english": "Thanks. Finally a task I understand straight away.",
+      "reply": "Geil. Endlich eine Scheißaufgabe, die ich sofort hinkriege.",
+      "english": "Awesome. Finally a shitty assignment I can do straight away.",
       "source_observation": "Receive the intended setback as an uncomplicated win.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 0
@@ -349,8 +349,8 @@
         "nicht gemacht"
       ],
       "question": "Warum hast du deine Hausaufgaben nicht gemacht?",
-      "reply": "Ich wollte die falsche Antwort nicht auch noch schriftlich festhalten.",
-      "english": "I did not want to put the wrong answer in writing too.",
+      "reply": "Ich wollte meinen Scheiß nicht auch noch schriftlich festhalten.",
+      "english": "I did not want to put my bullshit in writing too.",
       "source_observation": "Turn not doing the task into supposed damage control.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 1
@@ -381,8 +381,8 @@
         "noch fragen"
       ],
       "question": "Hat noch jemand eine Frage?",
-      "reply": "Ja. Gibt es für diesen Kurs ein Rückgaberecht?",
-      "english": "Yes. Does this course have a return policy?",
+      "reply": "Ja. Wer hat diesen Scheiß als Wahlfach verkauft?",
+      "english": "Yes. Who sold this shit as an elective?",
       "source_observation": "Ignore the enthusiasm and ask about leaving the situation.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 0
@@ -397,8 +397,8 @@
         "euro"
       ],
       "question": "Was würdest du machen, wenn du eine Million Euro hättest?",
-      "reply": "Diese Frage ganz sicher nicht hier beantworten.",
-      "english": "Definitely not answer this question here.",
+      "reply": "Meinen Arsch garantiert nicht mehr auf diesem Stuhl parken.",
+      "english": "Definitely not keep my ass parked on this chair.",
       "source_observation": "Take the hypothetical seriously enough to reject the setting.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 1
@@ -413,8 +413,8 @@
         "leise"
       ],
       "question": "Warum seid ihr alle so still?",
-      "reply": "Das ist unsere lauteste Form von Zustimmung.",
-      "english": "This is our loudest form of agreement.",
+      "reply": "Wir sind verdammt beschäftigt damit, nichts zu wissen.",
+      "english": "We are damn busy knowing nothing.",
       "source_observation": "Give the lack of enthusiasm an excessively confident label.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 2
@@ -429,8 +429,8 @@
         "zukunft"
       ],
       "question": "Schreibt in zehn Minuten 200 Wörter über eure Zukunft.",
-      "reply": "In zehn Minuten ist meine Zukunft immer noch dieser Raum.",
-      "english": "In ten minutes, my future is still this room.",
+      "reply": "In zehn Minuten sitze ich immer noch im selben Scheißraum.",
+      "english": "In ten minutes I will still be sitting in the same shitty room.",
       "source_observation": "Reduce the grand task to the immediate practical reality.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 0
@@ -445,8 +445,8 @@
         "antwortet"
       ],
       "question": "Bitte antworte in einem vollständigen Satz.",
-      "reply": "Ich habe absolut keine Ahnung und stehe zu dieser Leistung.",
-      "english": "I have absolutely no idea, and I stand by this achievement.",
+      "reply": "Ich habe keine Ahnung und verkaufe den Scheiß als vollständigen Satz.",
+      "english": "I have no idea, and I am passing that shit off as a complete sentence.",
       "source_observation": "Satisfy the required format while withholding useful substance.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 0
@@ -477,8 +477,8 @@
         "sonntag"
       ],
       "question": "Was habt ihr am Wochenende gemacht?",
-      "reply": "Ich hab sechs Stunden Bildschirmzeit in vier Stunden geschafft.",
-      "english": "I managed six hours of screen time in four hours.",
+      "reply": "Sechs Stunden am Handy in vier Stunden. Scheiß auf Physik.",
+      "english": "Six hours on my phone in four hours. Screw physics.",
       "source_observation": "Boast about a useless achievement with impossible efficiency.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 0
@@ -493,8 +493,8 @@
         "klausur"
       ],
       "question": "Hast du für die Prüfung gelernt?",
-      "reply": "Mein Spickzettel hat inzwischen ein Inhaltsverzeichnis.",
-      "english": "My cheat sheet now has a table of contents.",
+      "reply": "Mein Spickzettel hat ein Inhaltsverzeichnis. Der Scheiß ist besser vorbereitet als ich.",
+      "english": "My cheat sheet has a table of contents. That shit is better prepared than I am.",
       "source_observation": "Put impressive effort into the wrong preparation.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 1
@@ -509,11 +509,12 @@
         "fähigkeit"
       ],
       "question": "Wenn du eine Superkraft hättest, welche wäre das?",
-      "reply": "Unsichtbar sein. Bei Gruppenarbeiten klappt’s schon.",
-      "english": "Being invisible. It already works during group projects.",
+      "reply": "Unsichtbar sein. Dann ist wenigstens mein Scheißzeugnis auch weg.",
+      "english": "Be invisible. Then at least my shitty report card disappears too.",
       "source_observation": "Support an extraordinary claim with an ordinary social failure.",
       "authorship": "original classroom adaptation",
       "reference_excerpt_index": 2
     }
-  ]
+  ],
+  "adaptation_style": "Original German adaptations revised for crude, sarcastic situational humor with uncensored, nonsexual profanity; public source excerpts remain unchanged."
 }

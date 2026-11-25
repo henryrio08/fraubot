@@ -17,9 +17,9 @@ export const samples = [
         "am VOKH-un-en-duh OON-ter-tsohk ikh MY-nuh FRY-tsyte-guh-SHTAL-toong EYE-ner may-tah-kog-nee-TEE-vun ef-fee-TSYENTS-prue-fung, oom das SHPAN-oongs-fair-HELT-nis TSVI-shun ray-gay-nay-rah-TSYOHNS-buh-DUERF-nis, zoh-TSYAH-ler in-ter-ak-TSYOHNS-dikh-tuh oont LANG-fris-ti-ger ZELPST-virk-zahm-kytes-er-VAR-toong zis-tay-MAH-tish tsoo ah-nah-lee-ZEE-run. OON-ter buh-RUEK-zikh-ti-goong er-KENT-nis-tay-oh-RAY-ti-sher OON-zi-kher-hy-ten ent-VIK-ul-tuh ikh AN-shlee-sunt EYE-nuh ray-SOOR-sun-oh-ree-en-TEER-tuh pree-oh-ree-ZEE-roongs-shtrah-tay-GEE, DAY-run OOM-zet-soong EYE-nuh NAHKH-hal-ti-guh fair-BES-er-oong MY-ner psue-khoh-FUE-zi-shun buh-LAS-toongs-ray-goo-lah-TSYOHN er-MUEG-li-khun zol",
       ],
       funny: [
-        "Ich hab sechs Stunden Bildschirmzeit in vier Stunden geschafft.",
-        "I managed six hours of screen time in four hours.",
-        "ikh HAHB zeks SHTOON-dun BILT-shirm-tsyte in feer SHTOON-dun guh-SHAFT",
+        "Sechs Stunden am Handy in vier Stunden. Scheiß auf Physik.",
+        "Six hours on my phone in four hours. Screw physics.",
+        "zeks SHTOON-dun am HAN-dee in feer SHTOON-dun. SHYS owf fue-ZEEK",
       ],
       gibberish: [
         "Schnörbelgratz flümperte klabusterwärts! Zwickelflauch, drömmelschrapp und bröselquastig verknurpselt — krömpf? Nödelbratz! Zwäffelknork beschlummrig.",
@@ -69,9 +69,9 @@ export const samples = [
         "ikh VUER-duh mikh fuer dee kon-troh-LEER-tuh mah-nee-poo-lah-TSYOHN ROWM-tsyte-li-kher kon-tee-noo-ee-TATE ent-SHY-dun, dah EYE-nuh DAIR-ar-ti-guh FAY-ikh-kyte dee zee-mool-TAH-nuh UE-ber-vin-doong gay-oh-GRAH-fi-sher dis-TANTS-res-trik-TSYOH-nun oont kroh-noh-MAY-tri-sher ray-SOOR-sun-knap-hyte er-MUEG-li-khun VUER-duh. EE-ruh PRAK-ti-shuh AN-vent-bar-kyte LEE-suh zikh IN-buh-zon-duh-ruh doorkh EYE-nuh fair-ANT-vor-toongs-buh-VOOS-tuh FOL-gun-ap-shet-soong zoh-VEE dee buh-RUEK-zikh-ti-goong kow-zah-lee-TATES-buh-tsoh-guh-ner VEKH-zul-vir-koong-un op-tee-MEE-run",
       ],
       funny: [
-        "Unsichtbar sein. Bei Gruppenarbeiten klappt’s schon.",
-        "Be invisible. It already works during group projects.",
-        "OON-zikht-bahr zyne. bye GROO-pun-ar-bye-tun klapts shohn",
+        "Unsichtbar sein. Dann ist wenigstens mein Scheißzeugnis auch weg.",
+        "Be invisible. Then at least my shitty report card disappears too.",
+        "OON-zikht-bahr zyne. dan ist VAY-nik-stuns myne SHYS-tsoyk-nis owkh vek",
       ],
       gibberish: [
         "Grätschenflöck zwörmelt knüffelwärts! Schlabbertrümmel, drösselquonk, fläusig möppeldran; zwackelbrömm verschlödelquast. Krümpelzack schnäffelgrumpf, blömmelpfatz!",
@@ -85,6 +85,6 @@ export function demoAnswer(index: number, mode: Mode): Answer {
   const sample = samples[index % samples.length]; const a = sample.answers[mode];
   return {
     translation: sample.translation, german: a[0], english: a[1], pronunciation: a[2],
-    note: mode === "gibberish" ? "Invented words with no literal meaning. This is not real German." : mode === "funny" ? "Short, dry situational humor; may contain German profanity." : mode === "fluent" ? "Deliberately excessive academic German." : "Everyday German.",
+    note: mode === "gibberish" ? "Invented words with no literal meaning. This is not real German." : mode === "funny" ? "Crude, sarcastic situational humor with German profanity." : mode === "fluent" ? "Deliberately excessive academic German." : "Everyday German.",
   };
 }
