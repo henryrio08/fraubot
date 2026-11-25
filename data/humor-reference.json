@@ -1,0 +1,519 @@
+{
+  "version": 1,
+  "reviewed_on": "2026-11-24",
+  "purpose": "Qualitative prompt-reference dataset; not model training or a live social feed.",
+  "sampling": "Eight high-engagement video sources; 22 brief source excerpts and 24 original classroom adaptations. Public text/captures only; counts are snapshots. Commenter identities are omitted. German examples are authored, not comment translations.",
+  "limitations": "Instagram examples overrepresent one school-sketch creator. Some TikTok evidence is cached or secondary; the direct viewer required sign-in/age verification. Popularity does not prove a joke is funny.",
+  "sources": [
+    {
+      "id": "ig_manager",
+      "platform": "Instagram",
+      "url": "https://www.instagram.com/reel/Dez3kNoPbQe/",
+      "access": "primary public comments",
+      "popularity": "55.9K likes displayed",
+      "context": "A manager persistently tries to recruit a full-time employee.",
+      "excerpt": "till you ask bout a raise",
+      "observation": "Replies expose the transaction underneath the enthusiastic sales pitch.",
+      "context_basis": "Interpretation of the displayed caption and/or comments; not a full-video transcript.",
+      "additional_excerpts": [
+        "Atleast the manager actually wants you",
+        "mid life crisis in the middle of the toy isle"
+      ]
+    },
+    {
+      "id": "ig_class_friends",
+      "platform": "Instagram",
+      "url": "https://www.instagram.com/joerauth/reel/DgGmsLXPb34/",
+      "access": "primary public comments",
+      "popularity": "48.3K likes displayed",
+      "context": "Class friendships vanish when the shared timetable ends.",
+      "excerpt": "our schedules just never aligned",
+      "observation": "A temporary relationship is treated like an administrative arrangement.",
+      "context_basis": "Interpretation of the displayed caption and/or comments; not a full-video transcript.",
+      "additional_excerpts": [
+        "Then u have it on Instagram the rest of ur life",
+        "Damn this might’ve been me"
+      ]
+    },
+    {
+      "id": "ig_athletes",
+      "platform": "Instagram",
+      "url": "https://www.instagram.com/reel/DexPQB_B7Rh/",
+      "capture_url": "https://imginn.com/p/DexPQB_B7Rh/",
+      "access": "primary page plus older comment capture",
+      "popularity": "91.8K likes displayed on primary page",
+      "context": "Exaggerated character performances portray different kinds of workers.",
+      "excerpt": "How many takes did that shot take?",
+      "observation": "A reply ignores the performance and questions its production.",
+      "context_basis": "Interpretation of the displayed caption and/or comments; not a full-video transcript.",
+      "additional_excerpts": [
+        "Me watching this as I work sales",
+        "Last one is me lol"
+      ]
+    },
+    {
+      "id": "tt_overreaction",
+      "platform": "TikTok",
+      "url": "https://tikwm.com/video/7641587036268399885.html",
+      "original_post_id": "7641587036268399885",
+      "access": "public cached mirror comments",
+      "popularity": "Cached leading counters: 6,442,776 / 921,771; not live.",
+      "context": "An outsized rant provokes comments about disproportionate opposition.",
+      "excerpt": "Why’s bro spawn camping",
+      "observation": "Game difficulty language exposes the mismatch in the argument.",
+      "context_basis": "Interpretation of the displayed caption and/or comments; not a full-video transcript.",
+      "additional_excerpts": [
+        "Without cussing btw",
+        "Finally, a down to earth logical take"
+      ]
+    },
+    {
+      "id": "tt_class_exit",
+      "platform": "TikTok",
+      "url": "https://www.tikwm.com/video/7708441347153218830.html",
+      "original_post_id": "7708441347153218830",
+      "access": "public cached mirror comments",
+      "popularity": "Cached leading counters: 229,700 / 22,407; not live.",
+      "context": "Being sent outside class is received as good news.",
+      "excerpt": "my pleasure teach",
+      "observation": "An intended punishment is reframed as an unexpected benefit.",
+      "context_basis": "Interpretation of the displayed caption and/or comments; not a full-video transcript.",
+      "additional_excerpts": [
+        "bro in the classroom l act sad but out l celebrate",
+        "the boy: ok"
+      ]
+    },
+    {
+      "id": "tt_class_reaction",
+      "platform": "TikTok",
+      "url": "https://tikwm.com/video/7623096979211521294.html",
+      "original_post_id": "7623096979211521294",
+      "access": "public cached mirror comments",
+      "popularity": "Cached leading counters: 5,068,567 / 588,465; not live.",
+      "context": "A classroom reaction splits exaggerated laughter from a deadpan response.",
+      "excerpt": "I gotta leave ts school",
+      "observation": "A flat, practical exit undercuts everyone else’s heightened reaction.",
+      "context_basis": "Interpretation of the displayed caption and/or comments; not a full-video transcript.",
+      "additional_excerpts": [
+        "It cannot be that funny",
+        "Am I the only normal one here"
+      ]
+    },
+    {
+      "id": "tt_clock",
+      "platform": "TikTok",
+      "url": "https://ttanon.com/%40angels..666/video/7600054900071861536",
+      "original_post_id": "7600054900071861536",
+      "access": "public search-index caption snapshot",
+      "popularity": "Index reports 32.2M views and 3.4M likes; not live.",
+      "context": "A complicated maths-class clock obstructs a very simple request.",
+      "excerpt": "Please I just want to know the time",
+      "observation": "A basic need punctures unnecessary complexity; caption, not comment.",
+      "context_basis": "Interpretation of the displayed caption and/or comments; not a full-video transcript.",
+      "additional_excerpts": []
+    },
+    {
+      "id": "tt_minor_rage",
+      "platform": "TikTok",
+      "url": "https://www.tiktok.com/@foolybob/video/7705814343073467656",
+      "capture_url": "https://meme.com/memes/i-got-so-mad-trend-meme",
+      "access": "public comment-capture roundup; direct viewer gated",
+      "popularity": "Roundup reports over 989K compilation likes; not primary-verified.",
+      "context": "An exaggerated boast ends with a trivial or impossible action.",
+      "excerpt": "I got so mad I paused an online game",
+      "observation": "Confident delivery gives a tiny achievement absurdly high stakes.",
+      "context_basis": "Interpretation of the displayed caption and/or comments; not a full-video transcript.",
+      "additional_excerpts": [
+        "I got so mad I went to the toilet without my phone",
+        "Whoa too far"
+      ],
+      "evidence_scope": "Related trend captures; not every excerpt is verified under the linked compilation."
+    }
+  ],
+  "examples": [
+    {
+      "id": "h01",
+      "source_id": "ig_manager",
+      "mechanism": "transaction_reversal",
+      "triggers": [
+        "vorlesen",
+        "antwort vor",
+        "präsentier"
+      ],
+      "question": "Wer möchte seine Antwort vorlesen?",
+      "reply": "Ich. Aber die Note bleibt dann unter uns.",
+      "english": "Me. But the grade stays between us.",
+      "source_observation": "Volunteering becomes a suspiciously conditional offer.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 0
+    },
+    {
+      "id": "h02",
+      "source_id": "ig_manager",
+      "mechanism": "counter_offer",
+      "triggers": [
+        "zu spät",
+        "verspät",
+        "pünktlich"
+      ],
+      "question": "Warum bist du schon wieder zu spät?",
+      "reply": "Ich dachte, wir lassen uns beide mehr Zeit.",
+      "english": "I thought we were both taking our time.",
+      "source_observation": "Recast a mistake as an agreed arrangement.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 1
+    },
+    {
+      "id": "h03",
+      "source_id": "ig_manager",
+      "mechanism": "premise_challenge",
+      "triggers": [
+        "freiwillig",
+        "zusatzaufgab",
+        "extraaufgab"
+      ],
+      "question": "Machst du freiwillig noch eine Zusatzaufgabe?",
+      "reply": "Freiwillig? Ist das ein Tippfehler?",
+      "english": "Voluntarily? Is that a typo?",
+      "source_observation": "Question the supposedly attractive part of the offer.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 2
+    },
+    {
+      "id": "h04",
+      "source_id": "ig_class_friends",
+      "mechanism": "administrative_absurdity",
+      "triggers": [
+        "freund",
+        "kennen",
+        "beschreibe"
+      ],
+      "question": "Beschreibe deinen besten Schulfreund.",
+      "reply": "Außerhalb der Schule erkennen wir uns aus Datenschutzgründen nicht.",
+      "english": "Outside school, we do not recognize each other for privacy reasons.",
+      "source_observation": "Apply an official explanation to a fragile social bond.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 0
+    },
+    {
+      "id": "h05",
+      "source_id": "ig_class_friends",
+      "mechanism": "low_expectation",
+      "triggers": [
+        "mit wem",
+        "partner",
+        "zusammenarbeit"
+      ],
+      "question": "Wer arbeitet heute mit wem?",
+      "reply": "Ich nehme jemanden, der mich morgen noch kennt.",
+      "english": "I will pick someone who still knows me tomorrow.",
+      "source_observation": "Lower the bar to an unexpectedly specific minimum.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 1
+    },
+    {
+      "id": "h06",
+      "source_id": "ig_class_friends",
+      "mechanism": "wrong_achievement",
+      "triggers": [
+        "erfolg",
+        "stolz",
+        "geschafft"
+      ],
+      "question": "Was ist dein größter Erfolg?",
+      "reply": "Ich wurde wiedererkannt. Außerhalb meines Sitzplans.",
+      "english": "Someone recognized me. Outside the seating chart.",
+      "source_observation": "Celebrate a very small achievement with complete confidence.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 2
+    },
+    {
+      "id": "h07",
+      "source_id": "ig_athletes",
+      "mechanism": "wrong_focus",
+      "triggers": [
+        "text verstanden",
+        "versteh",
+        "lesen"
+      ],
+      "question": "Hast du den Text verstanden?",
+      "reply": "Ich erkenne die Schriftart.",
+      "english": "I recognize the font.",
+      "source_observation": "Answer the superficial detail instead of the actual task.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 0
+    },
+    {
+      "id": "h08",
+      "source_id": "ig_athletes",
+      "mechanism": "conditional_success",
+      "triggers": [
+        "präsentation",
+        "vortrag",
+        "gehalten"
+      ],
+      "question": "Wie war deine Präsentation?",
+      "reply": "Fehlerfrei. Wenn man den Inhalt ausblendet.",
+      "english": "Flawless. If you ignore the content.",
+      "source_observation": "Attach a condition that destroys the confident claim.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 1
+    },
+    {
+      "id": "h09",
+      "source_id": "ig_athletes",
+      "mechanism": "repeatable_failure",
+      "triggers": [
+        "noch einmal",
+        "noch mal",
+        "wiederhol"
+      ],
+      "question": "Kannst du das bitte noch einmal auf Deutsch sagen?",
+      "reply": "Klar. Ich hab den Fehler inzwischen auswendig gelernt.",
+      "english": "Sure. I have memorized the mistake by now.",
+      "source_observation": "Treat repeating the failure as a perfected performance.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 2
+    },
+    {
+      "id": "h10",
+      "source_id": "tt_overreaction",
+      "mechanism": "difficulty_mismatch",
+      "triggers": [
+        "einstieg",
+        "einfach",
+        "leicht"
+      ],
+      "question": "Das ist eine ganz einfache Einstiegsfrage.",
+      "reply": "Warum hat die Einstiegsfrage dann schon einen Endgegner?",
+      "english": "Why does the introductory question already have a final boss?",
+      "source_observation": "Name the gap between the advertised and actual difficulty.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 0
+    },
+    {
+      "id": "h11",
+      "source_id": "tt_overreaction",
+      "mechanism": "collapsed_contrast",
+      "triggers": [
+        "dativ",
+        "akkusativ",
+        "unterschied"
+      ],
+      "question": "Was ist der Unterschied zwischen Dativ und Akkusativ?",
+      "reply": "Beim einen rate ich. Beim anderen auch.",
+      "english": "I guess with one. With the other too.",
+      "source_observation": "Set up a distinction and collapse it at the end.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 1
+    },
+    {
+      "id": "h12",
+      "source_id": "tt_overreaction",
+      "mechanism": "unfiltered_admission",
+      "triggers": [
+        "deutsch",
+        "fremdsprach",
+        "sprachen"
+      ],
+      "question": "Warum ist es wichtig, eine Fremdsprache zu lernen?",
+      "reply": "Damit ich in zwei Sprachen Scheiße labern kann.",
+      "english": "So I can talk shit in two languages.",
+      "source_observation": "Make the real motive unusually blunt, without a speech.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 2
+    },
+    {
+      "id": "h13",
+      "source_id": "tt_class_exit",
+      "mechanism": "punishment_as_reward",
+      "triggers": [
+        "vor die tür",
+        "rausgehen",
+        "geh bitte"
+      ],
+      "question": "Dann geh bitte vor die Tür.",
+      "reply": "Danke. Endlich eine Aufgabe, die ich sofort verstehe.",
+      "english": "Thanks. Finally a task I understand straight away.",
+      "source_observation": "Receive the intended setback as an uncomplicated win.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 0
+    },
+    {
+      "id": "h14",
+      "source_id": "tt_class_exit",
+      "mechanism": "avoided_evidence",
+      "triggers": [
+        "hausaufgab",
+        "aufgaben nicht",
+        "nicht gemacht"
+      ],
+      "question": "Warum hast du deine Hausaufgaben nicht gemacht?",
+      "reply": "Ich wollte die falsche Antwort nicht auch noch schriftlich festhalten.",
+      "english": "I did not want to put the wrong answer in writing too.",
+      "source_observation": "Turn not doing the task into supposed damage control.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 1
+    },
+    {
+      "id": "h15",
+      "source_id": "tt_class_exit",
+      "mechanism": "convenient_compliance",
+      "triggers": [
+        "früher gehen",
+        "fertig seid",
+        "fertig bist"
+      ],
+      "question": "Ihr dürft früher gehen, wenn ihr fertig seid.",
+      "reply": "Ich war plötzlich auffällig schnell fertig.",
+      "english": "Suddenly I was suspiciously quick to finish.",
+      "source_observation": "Comply with the appearance of completion, not the work.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 2
+    },
+    {
+      "id": "h16",
+      "source_id": "tt_class_reaction",
+      "mechanism": "deadpan_exit",
+      "triggers": [
+        "noch jemand",
+        "eine frage",
+        "noch fragen"
+      ],
+      "question": "Hat noch jemand eine Frage?",
+      "reply": "Ja. Gibt es für diesen Kurs ein Rückgaberecht?",
+      "english": "Yes. Does this course have a return policy?",
+      "source_observation": "Ignore the enthusiasm and ask about leaving the situation.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 0
+    },
+    {
+      "id": "h17",
+      "source_id": "tt_class_reaction",
+      "mechanism": "premise_puncture",
+      "triggers": [
+        "million",
+        "reich",
+        "euro"
+      ],
+      "question": "Was würdest du machen, wenn du eine Million Euro hättest?",
+      "reply": "Diese Frage ganz sicher nicht hier beantworten.",
+      "english": "Definitely not answer this question here.",
+      "source_observation": "Take the hypothetical seriously enough to reject the setting.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 1
+    },
+    {
+      "id": "h18",
+      "source_id": "tt_class_reaction",
+      "mechanism": "flat_collective_response",
+      "triggers": [
+        "alle so still",
+        "ruhig",
+        "leise"
+      ],
+      "question": "Warum seid ihr alle so still?",
+      "reply": "Das ist unsere lauteste Form von Zustimmung.",
+      "english": "This is our loudest form of agreement.",
+      "source_observation": "Give the lack of enthusiasm an excessively confident label.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 2
+    },
+    {
+      "id": "h19",
+      "source_id": "tt_clock",
+      "mechanism": "literal_time_horizon",
+      "triggers": [
+        "zehn minuten",
+        "200 wörter",
+        "zukunft"
+      ],
+      "question": "Schreibt in zehn Minuten 200 Wörter über eure Zukunft.",
+      "reply": "In zehn Minuten ist meine Zukunft immer noch dieser Raum.",
+      "english": "In ten minutes, my future is still this room.",
+      "source_observation": "Reduce the grand task to the immediate practical reality.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 0
+    },
+    {
+      "id": "h20",
+      "source_id": "tt_clock",
+      "mechanism": "literal_compliance",
+      "triggers": [
+        "vollständigen satz",
+        "ganzen satz",
+        "antwortet"
+      ],
+      "question": "Bitte antworte in einem vollständigen Satz.",
+      "reply": "Ich habe absolut keine Ahnung und stehe zu dieser Leistung.",
+      "english": "I have absolutely no idea, and I stand by this achievement.",
+      "source_observation": "Satisfy the required format while withholding useful substance.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 0
+    },
+    {
+      "id": "h21",
+      "source_id": "tt_clock",
+      "mechanism": "unhelpful_alternative",
+      "triggers": [
+        "zusammenfass",
+        "zusammenfassung",
+        "text kurz"
+      ],
+      "question": "Bitte fasse den Text kurz zusammen.",
+      "reply": "Ich kann ihn auch ungelesen respektieren.",
+      "english": "I can respect it without reading it too.",
+      "source_observation": "Offer an easier action that sidesteps the requested task.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 0
+    },
+    {
+      "id": "h22",
+      "source_id": "tt_minor_rage",
+      "mechanism": "impossible_productivity",
+      "triggers": [
+        "wochenend",
+        "samstag",
+        "sonntag"
+      ],
+      "question": "Was habt ihr am Wochenende gemacht?",
+      "reply": "Ich hab sechs Stunden Bildschirmzeit in vier Stunden geschafft.",
+      "english": "I managed six hours of screen time in four hours.",
+      "source_observation": "Boast about a useless achievement with impossible efficiency.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 0
+    },
+    {
+      "id": "h23",
+      "source_id": "tt_minor_rage",
+      "mechanism": "overprepared_wrong_thing",
+      "triggers": [
+        "prüfung",
+        "gelernt",
+        "klausur"
+      ],
+      "question": "Hast du für die Prüfung gelernt?",
+      "reply": "Mein Spickzettel hat inzwischen ein Inhaltsverzeichnis.",
+      "english": "My cheat sheet now has a table of contents.",
+      "source_observation": "Put impressive effort into the wrong preparation.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 1
+    },
+    {
+      "id": "h24",
+      "source_id": "tt_minor_rage",
+      "mechanism": "mundane_superpower",
+      "triggers": [
+        "superkraft",
+        "unsichtbar",
+        "fähigkeit"
+      ],
+      "question": "Wenn du eine Superkraft hättest, welche wäre das?",
+      "reply": "Unsichtbar sein. Bei Gruppenarbeiten klappt’s schon.",
+      "english": "Being invisible. It already works during group projects.",
+      "source_observation": "Support an extraordinary claim with an ordinary social failure.",
+      "authorship": "original classroom adaptation",
+      "reference_excerpt_index": 2
+    }
+  ]
+}
